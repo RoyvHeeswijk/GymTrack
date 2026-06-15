@@ -4,7 +4,6 @@ import { useWorkouts } from '../hooks/useWorkouts'
 import { useSchedule } from '../hooks/useSchedule'
 import {
   computeDashboardStats,
-  computeMilestones,
   computePersonalRecords,
   computeWeeklyStreak,
   formatDateNl,
@@ -35,20 +34,11 @@ export default function DashboardPage() {
 
   const stats = computeDashboardStats(workouts)
   const streak = computeWeeklyStreak(workouts)
-  const recent = workouts.slice(0, 3)
+  const recent = workouts.slice(0, 2)
   const topPr = computePersonalRecords(workouts)[0] ?? null
-  const nextMilestone =
-    computeMilestones(workouts)
-      .filter((m) => !m.achieved)
-      .sort((a, b) => b.progress - a.progress)[0] ?? null
 
   const focusDay: PlanDay | null = agenda?.today?.planDay ?? agenda?.next?.planDay ?? null
   const focusIsToday = Boolean(agenda?.today)
-
-  const weekPct =
-    agenda && agenda.adherence.planned
-      ? Math.round((agenda.adherence.done / agenda.adherence.planned) * 100)
-      : 0
 
   function startLog() {
     navigate('/loggen')
@@ -141,34 +131,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {agenda && schedule && agenda.adherence.planned > 0 && (
-        <div className="card shrink-0 p-3">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="font-semibold text-white">Weekvoortgang</span>
-            <span className="tabular-nums text-slate-400">
-              {agenda.adherence.done}/{agenda.adherence.planned} trainingen
-            </span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
-              style={{ width: `${weekPct}%` }}
-            />
-          </div>
-          {agenda.missed.length > 0 && (
-            <p className="mt-1.5 text-[10px] text-amber-300">
-              {agenda.missed.length} gemist — volgende sessie schuift mee
-            </p>
-          )}
-          <Link
-            to="/agenda"
-            className="mt-1.5 block text-[10px] font-semibold uppercase tracking-wider text-emerald-400"
-          >
-            Agenda →
-          </Link>
-        </div>
-      )}
-
       <div className="dashboard-stats shrink-0">
         <div className="grid grid-cols-2 gap-1.5">
           <StatPill label="Deze week" value={String(stats.workoutsThisWeek)} unit="trainingen" />
@@ -182,35 +144,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {(topPr || nextMilestone) && (
-        <div className="grid shrink-0 grid-cols-1 gap-1.5 sm:grid-cols-2">
-          {topPr && (
-            <Link to="/progressie" className="card block p-3 transition hover:border-emerald-400/20">
-              <p className="section-title">Sterkste lift</p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{topPr.exerciseName}</p>
-              <p className="mt-0.5 text-xs font-bold tabular-nums text-emerald-400">
-                {topPr.bestWeightKg} kg × {topPr.reps}
-              </p>
-            </Link>
-          )}
-          {nextMilestone && (
-            <div className="card p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="section-title">Mijlpaal</p>
-                <span className="text-xs font-bold tabular-nums text-emerald-400">
-                  {Math.round(nextMilestone.progress * 100)}%
-                </span>
-              </div>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{nextMilestone.label}</p>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
-                  style={{ width: `${nextMilestone.progress * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+      {topPr && (
+        <Link to="/progressie" className="card block shrink-0 p-3 transition hover:border-emerald-400/20">
+          <p className="section-title">Sterkste lift</p>
+          <p className="mt-1 truncate text-sm font-semibold text-white">{topPr.exerciseName}</p>
+          <p className="mt-0.5 text-xs font-bold tabular-nums text-emerald-400">
+            {topPr.bestWeightKg} kg × {topPr.reps}
+          </p>
+        </Link>
       )}
 
       <section className="dashboard-recent shrink-0">
