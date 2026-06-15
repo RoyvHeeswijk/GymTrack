@@ -96,11 +96,11 @@ export default function AgendaPage() {
           <div className="min-w-0 flex-1">
             {agenda.next ? (
               <>
-                <p className="truncate text-sm font-bold text-white">{agenda.next.planDay.title}</p>
-                <p className="truncate text-xs text-slate-300">{agenda.next.planDay.focus}</p>
+                <p className="agenda-hero-title">{agenda.next.planDay.title}</p>
+                <p className="agenda-hero-subtitle">{agenda.next.planDay.focus}</p>
               </>
             ) : (
-              <p className="text-sm font-medium text-white">Deze week</p>
+              <p className="agenda-hero-title">Deze week</p>
             )}
             <div className="mt-2 flex items-center gap-2">
               <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
@@ -205,7 +205,7 @@ export default function AgendaPage() {
           {agenda.days.map((day) => (
             <div
               key={day.weekday}
-              className={`agenda-day-row card-tight ${day.isToday ? 'agenda-day-row--today ring-1 ring-emerald-400/40' : ''}`}
+              className={`agenda-day-row ${day.isToday ? 'agenda-day-row--today ring-1 ring-emerald-400/40' : ''}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
@@ -217,11 +217,19 @@ export default function AgendaPage() {
                     {day.shortLabel}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
+                    <p className="agenda-day-title">
                       {day.planDay ? day.planDay.title : 'Rust'}
                       {day.isToday && <span className="ml-1.5 text-[10px] text-emerald-400">nu</span>}
                     </p>
-                    <p className="truncate text-[11px] text-slate-500">
+                    <p
+                      className={`agenda-day-subtitle ${
+                        day.done
+                          ? 'agenda-day-subtitle--done'
+                          : day.missed
+                            ? 'agenda-day-subtitle--missed'
+                            : ''
+                      }`}
+                    >
                       {day.done ? '✓ Klaar' : day.missed ? 'Gemist' : day.planDay ? day.planDay.focus : 'Herstel'}
                     </p>
                   </div>
