@@ -12,9 +12,13 @@ dist
 dist-ssr
 *.local
 
-# Lokale omgevingsvariabelen (Supabase-keys e.d.)
+# Lokale omgevingsvariabelen (niet committen)
 .env
-.env.*
+.env.local
+.env.*.local
+
+# Productie-keys voor Vercel-build (anon key is publiek; wel committen)
+!.env.production
 !.env.example
 
 # Editor directories and files
