@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { deleteWorkout } from '../lib/api'
 import { formatDateNl } from '../lib/stats'
+import { recognizeExercise } from '../lib/exerciseDb'
+import PageHeader from '../components/PageHeader'
 import type { WorkoutWithSets } from '../lib/types'
 
 export default function HistoryPage() {
@@ -12,13 +14,10 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Geschiedenis</h1>
-        <p className="mt-1 text-sm text-slate-400">Al je trainingen op een rij.</p>
-      </div>
+      <PageHeader section="Historie" title="Trainingen" description="Al je sessies op een rij." />
 
       {workouts.length === 0 ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-center">
+        <div className="card text-center">
           <p className="text-3xl">📒</p>
           <p className="mt-2 text-sm text-slate-400">Nog geen trainingen gelogd.</p>
         </div>
@@ -59,7 +58,7 @@ function WorkoutCard({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60">
+    <div className="card-tight">
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-4 py-3.5 text-left"
@@ -79,10 +78,18 @@ function WorkoutCard({
       </button>
 
       {open && (
-        <div className="border-t border-slate-800 px-4 py-3">
-          {exercises.map((exerciseName) => (
+        <div className="border-t border-white/5 px-4 py-3">
+          {exercises.map((exerciseName) => {
+            const canonical = recognizeExercise(exerciseName)?.name ?? exerciseName
+            const note = workout.exercise_notes?.[canonical]?.trim()
+            return (
             <div key={exerciseName} className="py-2">
               <p className="mb-1 text-sm font-medium text-white">{exerciseName}</p>
+              {note && (
+                <p className="mb-2 rounded-lg border border-teal-400/20 bg-teal-400/5 px-2.5 py-1.5 text-xs leading-relaxed text-slate-300">
+                  {note}
+                </p>
+              )}
               <div className="space-y-0.5">
                 {workout.sets
                   .filter((s) => s.exercise_name === exerciseName)
@@ -93,7 +100,8 @@ function WorkoutCard({
                   ))}
               </div>
             </div>
-          ))}
+            )
+          })}
           <button
             onClick={() => void handleDelete()}
             disabled={deleting}

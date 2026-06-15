@@ -33,18 +33,20 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center px-6 py-12">
+    <div className="app-scroll flex flex-col justify-center px-6 py-12">
       <div className="mb-10 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 text-3xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/10 text-2xl">
           🏋️
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">GymTrack</h1>
+        <h1 className="text-2xl font-bold tracking-[0.12em] text-white">
+          GYM<span className="gradient-text">TRACK</span>
+        </h1>
         <p className="mt-2 text-sm text-slate-400">
-          Log je trainingen. Zie je progressie. Blijf gemotiveerd.
+          Plan slim. Train visueel. Begrijp je progressie.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="card space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
             E-mailadres
@@ -56,7 +58,7 @@ export default function AuthPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-emerald-500"
+            className="input-field"
             placeholder="jij@voorbeeld.nl"
           />
         </div>
@@ -72,24 +74,20 @@ export default function AuthPage() {
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-emerald-500"
+            className="input-field"
             placeholder="Minimaal 6 tekens"
           />
         </div>
 
         {error && (
-          <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>
+          <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>
         )}
         {info && (
-          <p className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">{info}</p>
+          <p className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">{info}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-xl bg-emerald-500 py-3.5 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50"
-        >
-          {busy ? 'Bezig…' : mode === 'login' ? 'Inloggen' : 'Account aanmaken'}
+        <button type="submit" disabled={busy} className="btn-primary w-full">
+          {busy ? 'Bezig…' : mode === 'login' ? 'Inloggen →' : 'Account aanmaken →'}
         </button>
       </form>
 

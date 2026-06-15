@@ -144,6 +144,36 @@ export function computeDashboardStats(workouts: WorkoutWithSets[]): DashboardSta
   }
 }
 
+/** Aantal aaneengesloten weken (incl. of t/m vorige week) met minstens één training. */
+export function computeWeeklyStreak(workouts: WorkoutWithSets[]): number {
+  if (workouts.length === 0) return 0
+
+  const weekKey = (date: Date): string => {
+    const d = new Date(date)
+    d.setHours(0, 0, 0, 0)
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)) // maandag
+    return d.toISOString().slice(0, 10)
+  }
+
+  const weeks = new Set(workouts.map((w) => weekKey(new Date(w.performed_at))))
+
+  let cursor = new Date()
+  cursor.setHours(0, 0, 0, 0)
+  cursor.setDate(cursor.getDate() - ((cursor.getDay() + 6) % 7))
+
+  // Lopende week mag leeg zijn zonder de reeks te breken
+  if (!weeks.has(cursor.toISOString().slice(0, 10))) {
+    cursor.setDate(cursor.getDate() - 7)
+  }
+
+  let streak = 0
+  while (weeks.has(cursor.toISOString().slice(0, 10))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 7)
+  }
+  return streak
+}
+
 export function formatDateNl(iso: string): string {
   return new Date(iso).toLocaleDateString('nl-NL', {
     weekday: 'short',

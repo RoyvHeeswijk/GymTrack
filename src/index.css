@@ -1,19 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-surface: #12171f;
+  --color-surface-raised: #181e28;
+  --color-surface-inset: #0e1218;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-accent-400: #22d3ee;
 }
 
-html, body {
-  background-color: #020617;
+html,
+body,
+#root {
+  background-color: #0a0e14;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }
 
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  color: #e2e8f0;
+  font-family: var(--font-sans);
 }
 
-/* Verberg spinners op number inputs voor een strakkere look */
+/* Subtiele diepte — vlakker dan voorheen, Aura-achtig */
+.app-bg {
+  background-color: #0a0e14;
+  background-image:
+    radial-gradient(50rem 50rem at 100% -20%, rgba(16, 185, 129, 0.08), transparent 50%),
+    radial-gradient(40rem 40rem at -20% 100%, rgba(6, 182, 212, 0.06), transparent 45%);
+}
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -22,4 +49,607 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+@layer components {
+  /* Aura-stijl: afgeronde kaarten op donkere surface */
+  .card {
+    @apply rounded-xl border border-white/[0.07] bg-[#12171f] p-4;
+  }
+
+  .card-tight {
+    @apply rounded-xl border border-white/[0.07] bg-[#12171f];
+  }
+
+  .surface-inset {
+    @apply rounded-lg border border-white/[0.05] bg-[#0e1218];
+  }
+
+  /* Pill-knoppen zoals Aura — onze emerald/cyan kleuren */
+  .btn-primary {
+    @apply rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 px-6 py-3.5 text-center text-sm font-bold uppercase tracking-wider text-slate-950 shadow-[0_0_24px_rgba(16,185,129,0.25)] transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply rounded-full border border-white/15 bg-transparent px-6 py-3 text-center text-sm font-semibold uppercase tracking-wide text-slate-200 transition hover:border-white/25 hover:bg-white/5;
+  }
+
+  .btn-ghost {
+    @apply rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:bg-white/10;
+  }
+
+  .chip {
+    @apply rounded-full border border-white/10 bg-[#0e1218] px-3 py-1.5 text-xs font-medium text-slate-300 transition;
+  }
+
+  .chip-active {
+    @apply border-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 font-semibold text-slate-950;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/10 bg-[#0e1218] px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-emerald-400/60 focus:ring-1 focus:ring-emerald-400/30;
+  }
+
+  .section-title {
+    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-white;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400;
+  }
+
+  .agenda-status-link {
+    @apply flex items-center gap-2.5 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] px-3.5 py-2.5 text-sm font-semibold text-emerald-400 transition hover:border-emerald-400/35 hover:bg-emerald-500/12 active:scale-[0.99];
+  }
+
+  .agenda-status-link-action {
+    @apply ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/80;
+  }
+
+  .agenda-status-notice {
+    @apply flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-400;
+  }
+
+  .metric-value {
+    @apply text-2xl font-bold tabular-nums tracking-tight text-white;
+  }
+
+  .metric-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  .nav-pill-active {
+    @apply rounded-xl bg-emerald-500/15 text-emerald-400;
+  }
+
+  /* Workout log — Lovable-stijl */
+  .log-workout-label {
+    @apply min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-slate-400 outline-none placeholder:text-slate-600;
+  }
+
+  .log-progress-label {
+    @apply shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500;
+  }
+
+  .log-page-title {
+    @apply text-[1.65rem] font-bold leading-tight tracking-tight text-white;
+  }
+
+  .log-volgorde-btn {
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-teal-400/40 hover:text-white;
+  }
+
+  .log-exercise-card {
+    @apply space-y-4 rounded-2xl bg-[#1e293b] p-5;
+  }
+
+  .log-exercise-meta {
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  .log-exercise-title {
+    @apply text-[1.75rem] font-bold leading-tight text-white;
+  }
+
+  .log-equipment-chip {
+    @apply inline-flex rounded-full border border-[#334155] bg-[#0f172a] px-3 py-1 text-xs font-medium text-slate-400;
+  }
+
+  .log-set-input {
+    @apply h-12 w-full rounded-xl border border-[#334155] bg-[#0f172a] px-2 text-center text-lg font-semibold tabular-nums text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
+  }
+
+  .log-set-check {
+    @apply flex h-12 w-12 items-center justify-center rounded-xl border border-[#334155] bg-[#0f172a] text-base font-bold text-transparent transition hover:border-teal-400/40;
+  }
+
+  .log-set-check--done {
+    @apply border-teal-400/60 bg-teal-400/15 text-teal-400;
+  }
+
+  .log-add-set-btn {
+    @apply w-full rounded-xl border border-dashed border-[#475569] py-3.5 text-sm font-medium text-slate-400 transition hover:border-teal-400/50 hover:text-teal-300;
+  }
+
+  .log-alt-btn {
+    @apply flex w-full items-center justify-center gap-2 rounded-xl border border-[#334155] bg-[#1e293b] py-4 text-sm font-medium text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300;
+  }
+
+  .log-coach-tip {
+    @apply rounded-2xl border border-teal-400/30 bg-teal-400/[0.04] p-4;
+  }
+
+  .log-nav-arrow {
+    @apply flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#0a0e14] text-white/90 transition hover:border-white/20 hover:bg-[#12171f] active:scale-[0.97] disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-[#0a0e14];
+  }
+
+  .log-btn-next {
+    @apply min-w-0 flex-1 rounded-2xl bg-teal-400 py-4 text-center text-base font-bold text-slate-950 transition hover:bg-teal-300 active:scale-[0.99] disabled:opacity-40;
+  }
+
+  .log-reorder-backdrop {
+    @apply fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm;
+  }
+
+  .log-reorder-sheet {
+    @apply w-full max-w-md space-y-3 rounded-2xl border border-[#334155] bg-[#1e293b] p-5 shadow-2xl;
+  }
+
+  .log-reorder-row {
+    @apply flex items-center gap-3 rounded-xl border border-[#334155] bg-[#0f172a] px-4 py-3;
+  }
+
+  .log-reorder-move {
+    @apply flex h-9 w-9 items-center justify-center rounded-lg border border-[#334155] text-slate-400 transition hover:border-teal-400/40 hover:text-teal-300 disabled:opacity-25;
+  }
+
+  .log-muscle-focus {
+    @apply rounded-xl border border-[#334155] bg-[#0f172a]/80 p-3;
+  }
+
+  .log-muscle-focus-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-teal-400;
+  }
+
+  .log-muscle-chip {
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .log-muscle-chip--primary {
+    @apply border border-teal-400/30 bg-teal-400/10 text-teal-300;
+  }
+
+  .log-muscle-chip--secondary {
+    @apply border border-[#334155] bg-[#1e293b] text-slate-400;
+  }
+
+  .log-exercise-note {
+    @apply w-full resize-none rounded-xl border border-[#334155] bg-[#0f172a] px-3 py-2.5 text-sm leading-relaxed text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
+  }
+
+  /* Semantische helpers (instellingen, 3D-legenda) */
+  .text-primary {
+    @apply text-white;
+  }
+
+  .text-muted {
+    @apply text-slate-500;
+  }
+
+  .border-theme {
+    @apply border-white/[0.07];
+  }
+
+  .ring-theme {
+    @apply ring-white/5;
+  }
+
+  .app-shell {
+    @apply flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden text-slate-100;
+  }
+
+  .app-layout {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+  }
+
+  .app-main {
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pb-24 pt-5;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .app-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-scroll {
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .app-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-screen {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+  }
+
+  .app-header {
+    @apply border-white/[0.06] bg-[#0a0e14]/95;
+  }
+
+  .app-nav {
+    @apply border-white/[0.06] bg-[#0a0e14]/95;
+  }
+
+  .app-logo {
+    @apply text-white;
+  }
+
+  .app-icon-btn {
+    @apply border-white/10 bg-[#12171f] hover:border-white/20;
+  }
+
+  .legend-chip {
+    @apply border border-white/10 bg-[#12171f] text-slate-300;
+  }
+}
+
+/* ── Dagmodus (witte achtergrond) ── */
+html.light {
+  color-scheme: light;
+}
+
+html.light,
+html.light body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+html.light .app-bg {
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(50rem 50rem at 100% -20%, rgba(16, 185, 129, 0.06), transparent 50%),
+    radial-gradient(40rem 40rem at -20% 100%, rgba(6, 182, 212, 0.05), transparent 45%);
+}
+
+html.light .app-shell {
+  color: #0f172a;
+}
+
+html.light .app-header,
+html.light .app-nav {
+  border-color: rgba(15, 23, 42, 0.08);
+  background-color: rgba(248, 250, 252, 0.95);
+}
+
+html.light .app-logo {
+  color: #0f172a;
+}
+
+html.light .app-icon-btn {
+  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #ffffff;
+  color: #64748b;
+}
+
+html.light .app-icon-btn:hover {
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+}
+
+/* Tekstkleuren — globale remapping voor hardcoded Tailwind utilities */
+html.light .text-white {
+  color: #0f172a;
+}
+
+html.light .text-slate-100 {
+  color: #0f172a;
+}
+
+html.light .text-slate-200 {
+  color: #334155;
+}
+
+html.light .text-slate-300 {
+  color: #475569;
+}
+
+html.light .text-slate-600 {
+  color: #64748b;
+}
+
+html.light .text-amber-300 {
+  color: #b45309;
+}
+
+html.light .text-emerald-300 {
+  color: #059669;
+}
+
+html.light .hover\:text-white:hover,
+html.light .hover\:text-slate-200:hover,
+html.light .hover\:text-slate-300:hover {
+  color: #0f172a;
+}
+
+html.light .text-primary {
+  color: #0f172a;
+}
+
+html.light .text-muted {
+  color: #64748b;
+}
+
+html.light .border-theme {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html.light .ring-theme {
+  --tw-ring-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Semi-transparante achtergronden en randen */
+html.light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.06);
+}
+
+html.light .bg-white\/15 {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .bg-white\/20 {
+  background-color: rgba(15, 23, 42, 0.1);
+}
+
+html.light .bg-white\/\[0\.04\] {
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .bg-white\/\[0\.06\] {
+  background-color: rgba(15, 23, 42, 0.06);
+}
+
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(15, 23, 42, 0.06);
+}
+
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .hover\:bg-white\/20:hover {
+  background-color: rgba(15, 23, 42, 0.12);
+}
+
+html.light .border-white\/5,
+html.light .border-white\/\[0\.05\] {
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+html.light .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html.light .border-white\/15 {
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+html.light .border-white\/\[0\.06\] {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .border-white\/\[0\.07\] {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .border-slate-700 {
+  border-color: #cbd5e1;
+}
+
+html.light .border-\[\#334155\] {
+  border-color: #cbd5e1;
+}
+
+/* Donkere hex-achtergronden in inline classes */
+html.light .bg-\[\#0a0e14\],
+html.light .bg-\[\#0e1218\],
+html.light .bg-\[\#0f172a\],
+html.light .bg-\[\#12171f\],
+html.light .bg-\[\#1e293b\] {
+  background-color: #f8fafc;
+}
+
+html.light .bg-slate-950\/40,
+html.light .bg-slate-900\/60 {
+  background-color: #f1f5f9;
+}
+
+html.light .bg-slate-950 {
+  background-color: #f8fafc;
+}
+
+html.light .bg-slate-900 {
+  background-color: #f1f5f9;
+}
+
+html.light .bg-slate-800 {
+  background-color: #e2e8f0;
+}
+
+html.light .border-slate-800 {
+  border-color: #cbd5e1;
+}
+
+html.light .card,
+html.light .card-tight {
+  border-color: rgba(15, 23, 42, 0.08);
+  background-color: #ffffff;
+}
+
+html.light .surface-inset {
+  border-color: rgba(15, 23, 42, 0.06);
+  background-color: #f1f5f9;
+}
+
+html.light .page-title,
+html.light .metric-value {
+  color: #0f172a;
+}
+
+html.light .section-title,
+html.light .metric-label {
+  color: #64748b;
+}
+
+html.light .chip {
+  border-color: rgba(15, 23, 42, 0.1);
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+html.light .input-field {
+  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+html.light .input-field::placeholder {
+  color: #94a3b8;
+}
+
+html.light .btn-secondary {
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #334155;
+}
+
+html.light .btn-secondary:hover {
+  border-color: rgba(15, 23, 42, 0.25);
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .btn-ghost {
+  border-color: rgba(15, 23, 42, 0.1);
+  background-color: rgba(15, 23, 42, 0.03);
+  color: #475569;
+}
+
+html.light .nav-pill-active {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+html.light .legend-chip {
+  border-color: rgba(15, 23, 42, 0.1);
+  background-color: #ffffff;
+  color: #475569;
+}
+
+/* Log-pagina */
+html.light .log-page-title,
+html.light .log-exercise-title {
+  color: #0f172a;
+}
+
+html.light .log-exercise-card {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+html.light .log-volgorde-btn,
+html.light .log-alt-btn,
+html.light .log-reorder-sheet {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+  color: #334155;
+}
+
+html.light .log-volgorde-btn:hover {
+  color: #0f172a;
+}
+
+html.light .log-equipment-chip,
+html.light .log-set-input,
+html.light .log-set-check,
+html.light .log-reorder-row,
+html.light .log-exercise-note {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .log-workout-label {
+  color: #64748b;
+}
+
+html.light .log-add-set-btn {
+  color: #64748b;
+  border-color: #94a3b8;
+}
+
+html.light .log-add-set-btn:hover {
+  color: #0d9488;
+}
+
+html.light .log-muscle-focus {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+html.light .log-muscle-chip--primary {
+  color: #0d9488;
+}
+
+html.light .log-muscle-chip--secondary {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+  color: #64748b;
+}
+
+html.light .log-coach-tip {
+  border-color: rgba(20, 184, 166, 0.35);
+  background-color: rgba(20, 184, 166, 0.06);
+}
+
+html.light .log-coach-tip li {
+  color: #334155;
+}
+
+html.light .log-nav-arrow {
+  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+html.light .log-nav-arrow:hover {
+  border-color: rgba(15, 23, 42, 0.2);
+  background-color: #f1f5f9;
+}
+
+html.light .log-reorder-backdrop {
+  background-color: rgba(15, 23, 42, 0.35);
+}
+
+html.light .log-reorder-move {
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+/* Instellingen toggle uit-stand */
+html.light .bg-\[\#334155\] {
+  background-color: #cbd5e1;
 }

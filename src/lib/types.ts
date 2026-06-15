@@ -11,6 +11,8 @@ export interface Workout {
   name: string
   performed_at: string
   notes: string | null
+  /** Canonieke oefeningnaam -> vrije notitie (bijv. aanpassing). */
+  exercise_notes: Record<string, string> | null
   created_at: string
 }
 
