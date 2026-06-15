@@ -6,6 +6,7 @@ import { updateScheduleAssignments } from '../lib/api'
 import { computeAgenda, computeMonth, WEEKDAY_LABELS, WEEKDAY_SHORT } from '../lib/scheduling'
 import PageHeader from '../components/PageHeader'
 import { AgendaActivatedNotice } from '../components/AgendaStatusBanner'
+import SchemaStoragePanel, { HiddenSchemasHint } from '../components/SchemaStoragePanel'
 
 export default function AgendaPage() {
   const navigate = useNavigate()
@@ -13,7 +14,7 @@ export default function AgendaPage() {
   const scheduleJustActivated = Boolean(
     (location.state as { scheduleActivated?: boolean } | null)?.scheduleActivated,
   )
-  const { schedule, setSchedule, loading } = useSchedule()
+  const { schedule, setSchedule, loading, reload } = useSchedule()
   const { workouts, loading: workoutsLoading } = useWorkouts()
   const [editingWeekday, setEditingWeekday] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
@@ -58,6 +59,7 @@ export default function AgendaPage() {
             Laat de AI Schema-Architect een schema maken en activeer dat als jouw weekagenda. Geef
             daarbij aan welke dagen je niet kunt en hoeveel tijd je hebt.
           </p>
+          <HiddenSchemasHint />
           <Link to="/planner" className="btn-primary mt-4 inline-block px-6">
             Schema maken
           </Link>
@@ -314,6 +316,8 @@ export default function AgendaPage() {
       <Link to="/planner" className="btn-secondary block">
         Nieuw schema maken
       </Link>
+
+      <SchemaStoragePanel onChanged={reload} showHidden={false} embedded />
     </div>
   )
 }

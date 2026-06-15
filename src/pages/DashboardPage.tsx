@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSchedule } from '../hooks/useSchedule'
 import SchemaGenerator from '../components/SchemaGenerator'
+import SchemaStoragePanel from '../components/SchemaStoragePanel'
 import { AgendaStatusLink } from '../components/AgendaStatusBanner'
 import {
   computeDashboardStats,
@@ -147,9 +148,9 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Schema generator ingeklapt */}
+      {/* Schema beheer + generator ingeklapt */}
       {schedule && (
-        <div className="card">
+        <div className="card space-y-4">
           <button
             onClick={() => setShowGenerator((v) => !v)}
             className="flex w-full items-center justify-between text-left"
@@ -161,11 +162,18 @@ export default function DashboardPage() {
             <span className="btn-ghost">{showGenerator ? 'Sluiten' : 'Openen'}</span>
           </button>
           {showGenerator && (
-            <div className="mt-4 border-t border-white/[0.06] pt-4">
+            <div className="border-t border-white/[0.06] pt-4">
               <SchemaGenerator onActivated={reloadSchedule} />
             </div>
           )}
+          <div className="border-t border-white/[0.06] pt-4">
+            <SchemaStoragePanel onChanged={reloadSchedule} showHidden={false} embedded />
+          </div>
         </div>
+      )}
+
+      {!schedule && (
+        <SchemaStoragePanel onChanged={reloadSchedule} showActive={false} />
       )}
 
       {workouts.length === 0 ? (

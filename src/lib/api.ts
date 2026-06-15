@@ -273,6 +273,40 @@ export async function fetchActiveSchedule(): Promise<Schedule | null> {
   return (data as Schedule | null) ?? null
 }
 
+/** Haalt verborgen (inactieve) schema's op, nieuwste eerst. */
+export async function fetchInactiveSchedules(): Promise<Schedule[]> {
+  const { data, error } = await supabase
+    .from('schedules')
+    .select('*')
+    .eq('is_active', false)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as Schedule[]
+}
+
+/** Verbergt het actieve schema — blijft opgeslagen maar wordt niet meer gebruikt. */
+export async function deactivateSchedule(scheduleId: string): Promise<void> {
+  const { error } = await supabase
+    .from('schedules')
+    .update({ is_active: false })
+    .eq('id', scheduleId)
+  if (error) throw error
+}
+
+/** Zet een opgeslagen schema weer als actieve agenda. */
+export async function reactivateSchedule(userId: string, scheduleId: string): Promise<Schedule> {
+  await supabase.from('schedules').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
+
+  const { data, error } = await supabase
+    .from('schedules')
+    .update({ is_active: true })
+    .eq('id', scheduleId)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Schedule
+}
+
 /** Activeert een nieuw weekschema en deactiveert eventuele eerdere agenda's. */
 export async function activateSchedule(
   userId: string,
