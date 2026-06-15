@@ -653,3 +653,19 @@ html.light .log-reorder-move {
 html.light .bg-\[\#334155\] {
   background-color: #cbd5e1;
 }
+
+html.light .agenda-status-link,
+html.light .agenda-status-notice {
+  border-color: rgba(16, 185, 129, 0.25);
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #059669;
+}
+
+html.light .agenda-status-link:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+html.light .agenda-status-link-action {
+  color: #047857;
+}
