@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { MUSCLE_LABELS } from '../lib/muscles'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { activateSchedule, deletePlan, fetchPlans, savePlan, DEFAULT_EXERCISES, type SavedPlan } from '../lib/api'
 import { EXERCISE_DB } from '../lib/exerciseDb'
 import {
+  exercisesForMinutes,
   generatePlan,
   parseExercisePreferenceList,
   parsePlanRequest,
@@ -14,7 +16,7 @@ import {
   type Goal,
   type PlanDay,
 } from '../lib/planner'
-import { getExerciseInfo } from '../lib/exerciseDb'
+import { getExerciseInfo, recognizeExercise } from '../lib/exerciseDb'
 import Body3D from './Body3D'
 import ExerciseCoach from './ExerciseCoach'
 import ManualSchemaBuilder from './ManualSchemaBuilder'
@@ -48,6 +50,12 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
   const [extra, setExtra] = useState('')
   const [preferredExercises, setPreferredExercises] = useState('')
   const [avoidedExercises, setAvoidedExercises] = useState('')
+  const [focusOnly, setFocusOnly] = useState(false)
+
+  const detectedFocusMuscles = useMemo(
+    () => parsePlanRequest(extra).focusMuscles,
+    [extra],
+  )
 
   const [plan, setPlan] = useState<GeneratedPlan | null>(null)
   const [mode, setMode] = useState<'ai' | 'manual'>('ai')
@@ -62,6 +70,10 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
   useEffect(() => {
     fetchPlans().then(setSavedPlans).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (detectedFocusMuscles.length === 0) setFocusOnly(false)
+  }, [detectedFocusMuscles.length])
 
   const exerciseSuggestions = useMemo(() => {
     const all = new Set([...DEFAULT_EXERCISES, ...EXERCISE_DB.map((e) => e.name)])
@@ -107,6 +119,11 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
       if (avoided.length > 0) {
         detected.push(`Vermijden: ${avoided.join(', ')}`)
       }
+      if (focusOnly && parsed.focusMuscles.length > 0) {
+        detected.push(
+          `Alleen trainen: ${parsed.focusMuscles.map((m) => MUSCLE_LABELS[m]).join(', ')}`,
+        )
+      }
 
       const request = {
         ...parsed,
@@ -117,6 +134,7 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
         detected,
         preferredExercises: preferredFiltered,
         avoidedExercises: avoided,
+        focusOnly: focusOnly && parsed.focusMuscles.length > 0,
       }
       setPlan(generatePlan(request))
       setGenerating(false)
@@ -141,6 +159,75 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
       return { ...current, days }
     })
     setSaveState('idle')
+    setError(null)
+  }
+
+  function removeExercise(dayIndex: number, exerciseIndex: number) {
+    setPlan((current) => {
+      if (!current) return current
+      const day = current.days[dayIndex]
+      if (!day || day.exercises.length <= 1) return current
+      const days = current.days.map((d, index) =>
+        index === dayIndex
+          ? { ...d, exercises: d.exercises.filter((_, i) => i !== exerciseIndex) }
+          : d,
+      )
+      return { ...current, days }
+    })
+    setSaveState('idle')
+    setError(null)
+  }
+
+  function addExercise(dayIndex: number, rawName: string) {
+    const trimmed = rawName.trim()
+    if (!trimmed) return
+    const info = recognizeExercise(trimmed) ?? getExerciseInfo(trimmed)
+    if (!info) {
+      setError(`Oefening "${trimmed}" niet herkend. Kies een naam uit de suggesties.`)
+      return
+    }
+    const maxExercises = plan ? exercisesForMinutes(plan.sessionMinutes) : 6
+    const day = plan?.days[dayIndex]
+    if (!day) return
+    if (day.exercises.length >= maxExercises) {
+      setError(`Maximaal ${maxExercises} oefeningen per training.`)
+      return
+    }
+    if (day.exercises.some((e) => e.name.toLowerCase() === info.name.toLowerCase())) {
+      setError(`${info.name} staat al in deze training.`)
+      return
+    }
+    setPlan((current) => {
+      if (!current) return current
+      const days = current.days.map((d, index) =>
+        index === dayIndex
+          ? {
+              ...d,
+              exercises: [...d.exercises, { name: info.name, sets: 3, reps: '8-12' }],
+            }
+          : d,
+      )
+      return { ...current, days }
+    })
+    setSaveState('idle')
+    setError(null)
+  }
+
+  function moveExercise(dayIndex: number, exerciseIndex: number, direction: -1 | 1) {
+    setPlan((current) => {
+      if (!current) return current
+      const day = current.days[dayIndex]
+      if (!day) return current
+      const target = exerciseIndex + direction
+      if (target < 0 || target >= day.exercises.length) return current
+      const exercises = [...day.exercises]
+      const [item] = exercises.splice(exerciseIndex, 1)
+      exercises.splice(target, 0, item)
+      const days = current.days.map((d, index) => (index === dayIndex ? { ...d, exercises } : d))
+      return { ...current, days }
+    })
+    setSaveState('idle')
+    setError(null)
   }
 
   function startWorkout() {
@@ -202,6 +289,11 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
 
   return (
     <div className="space-y-4">
+      <datalist id="schema-exercise-suggestions">
+        {exerciseSuggestions.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
       {/* Compacte samenvatting wanneer het formulier is ingeklapt */}
       {!showForm && (
         <button
@@ -251,11 +343,6 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
             <ManualSchemaBuilder onComplete={handleManualComplete} />
           ) : (
         <div className="space-y-4">
-          <datalist id="schema-exercise-suggestions">
-            {exerciseSuggestions.map((name) => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
           <div>
             <p className="section-title mb-2">Doel</p>
             <div className="flex flex-wrap gap-1.5">
@@ -336,6 +423,25 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
                 </button>
               ))}
             </div>
+            {detectedFocusMuscles.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setFocusOnly((prev) => !prev)}
+                className={`mt-2 w-full rounded-xl border px-3 py-2.5 text-left text-xs transition ${
+                  focusOnly
+                    ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300'
+                    : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                }`}
+              >
+                <span className="font-semibold">
+                  {focusOnly ? '✓ ' : ''}Alleen deze spiergroepen trainen
+                </span>
+                <span className="mt-0.5 block text-[11px] opacity-90">
+                  {detectedFocusMuscles.map((m) => MUSCLE_LABELS[m]).join(', ')} — geen andere
+                  oefeningen, behalve assistent-spieren bij compound-oefeningen
+                </span>
+              </button>
+            )}
           </div>
 
           <div>
@@ -415,8 +521,12 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
                   key={`${day.title}-${dayIndex}`}
                   day={day}
                   dayNumber={dayIndex + 1}
+                  maxExercises={exercisesForMinutes(plan.sessionMinutes)}
                   workouts={workouts}
                   onSwap={(oldName, newName) => swapExercise(dayIndex, oldName, newName)}
+                  onRemove={(exerciseIndex) => removeExercise(dayIndex, exerciseIndex)}
+                  onAdd={(name) => addExercise(dayIndex, name)}
+                  onMove={(exerciseIndex, direction) => moveExercise(dayIndex, exerciseIndex, direction)}
                   onStart={() => startWorkout()}
                 />
               ))}
@@ -534,6 +644,8 @@ function WishBadges({ reasoning }: { reasoning: string[] }) {
       badges.push({ text: line.replace('Beperking herkend: ', ''), cls: 'border-white/15 bg-white/5 text-slate-300' })
     } else if (line.startsWith('Voorkeursoefeningen:')) {
       badges.push({ text: line.replace('Voorkeursoefeningen: ', ''), cls: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300' })
+    } else if (line.startsWith('Alleen trainen:')) {
+      badges.push({ text: line.replace('Alleen trainen: ', 'Alleen: '), cls: 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300' })
     } else if (line.startsWith('Vermijden:')) {
       badges.push({ text: line.replace('Vermijden: ', ''), cls: 'border-red-400/40 bg-red-500/10 text-red-300' })
     }
@@ -558,17 +670,31 @@ function WishBadges({ reasoning }: { reasoning: string[] }) {
 function PlanDayCard({
   day,
   dayNumber,
+  maxExercises,
   workouts,
   onSwap,
+  onRemove,
+  onAdd,
+  onMove,
   onStart,
 }: {
   day: PlanDay
   dayNumber: number
+  maxExercises: number
   workouts: WorkoutWithSets[]
   onSwap: (oldName: string, newName: string) => void
+  onRemove: (exerciseIndex: number) => void
+  onAdd: (name: string) => void
+  onMove: (exerciseIndex: number, direction: -1 | 1) => void
   onStart: () => void
 }) {
   const [openExercise, setOpenExercise] = useState<string | null>(null)
+  const [newExerciseName, setNewExerciseName] = useState('')
+
+  function handleAdd() {
+    onAdd(newExerciseName)
+    setNewExerciseName('')
+  }
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-slate-950/40 p-4">
@@ -579,23 +705,55 @@ function PlanDayCard({
         <span className="text-xs text-slate-500">{day.focus}</span>
       </div>
       <div className="mt-3 space-y-2">
-        {day.exercises.map((exercise) => {
+        {day.exercises.map((exercise, exerciseIndex) => {
           const known = getExerciseInfo(exercise.name) !== null
           const open = openExercise === exercise.name
           return (
-            <div key={exercise.name} className="rounded-2xl bg-white/5">
-              <button
-                onClick={() => known && setOpenExercise(open ? null : exercise.name)}
-                className="flex w-full items-center justify-between px-3 py-2.5 text-left"
-              >
-                <span className="flex items-center gap-2 text-sm text-white">
-                  {exercise.name}
-                  {known && <span className="text-[10px] text-slate-500">{open ? '▲' : '▼ 3D & info'}</span>}
-                </span>
-                <span className="text-xs font-medium text-emerald-400">
-                  {exercise.sets} × {exercise.reps}
-                </span>
-              </button>
+            <div key={`${exercise.name}-${exerciseIndex}`} className="rounded-2xl bg-white/5">
+              <div className="flex items-stretch gap-1 px-1 py-1">
+                <div className="flex shrink-0 flex-col justify-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => onMove(exerciseIndex, -1)}
+                    disabled={exerciseIndex === 0}
+                    className="rounded px-1.5 text-[10px] text-slate-500 hover:text-white disabled:opacity-30"
+                    aria-label="Omhoog"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMove(exerciseIndex, 1)}
+                    disabled={exerciseIndex === day.exercises.length - 1}
+                    className="rounded px-1.5 text-[10px] text-slate-500 hover:text-white disabled:opacity-30"
+                    aria-label="Omlaag"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => known && setOpenExercise(open ? null : exercise.name)}
+                  className="flex min-w-0 flex-1 items-center justify-between px-2 py-2 text-left"
+                >
+                  <span className="flex items-center gap-2 text-sm text-white">
+                    {exercise.name}
+                    {known && <span className="text-[10px] text-slate-500">{open ? '▲' : '▼ 3D & info'}</span>}
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-emerald-400">
+                    {exercise.sets} × {exercise.reps}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemove(exerciseIndex)}
+                  disabled={day.exercises.length <= 1}
+                  className="flex w-8 shrink-0 items-center justify-center text-slate-500 hover:text-red-400 disabled:opacity-30"
+                  aria-label="Oefening verwijderen"
+                >
+                  ×
+                </button>
+              </div>
               {open && (
                 <div className="px-3 pb-3">
                   <ExerciseCoach
@@ -612,6 +770,26 @@ function PlanDayCard({
           )
         })}
       </div>
+      {day.exercises.length < maxExercises && (
+        <div className="mt-2 flex gap-2">
+          <input
+            type="text"
+            list="schema-exercise-suggestions"
+            value={newExerciseName}
+            onChange={(e) => setNewExerciseName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAdd())}
+            placeholder="Oefening toevoegen"
+            className="input-field min-w-0 flex-1 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="shrink-0 rounded-lg border border-dashed border-white/15 px-3 text-xs font-medium text-slate-400 hover:border-emerald-400/40 hover:text-emerald-300"
+          >
+            +
+          </button>
+        </div>
+      )}
       <button onClick={onStart} className="btn-primary mt-3 w-full py-2.5 text-sm">
         Start deze training →
       </button>

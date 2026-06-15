@@ -1,4 +1,4 @@
-import { getExerciseInfo, recognizeExercise, type Equipment, type ExerciseInfo } from './exerciseDb'
+import { EXERCISE_DB, getExerciseInfo, recognizeExercise, type Equipment, type ExerciseInfo } from './exerciseDb'
 import { MUSCLE_LABELS, normalizeActivation, type MuscleActivation, type MuscleId } from './muscles'
 
 export type Goal = 'kracht' | 'spiermassa' | 'afvallen' | 'conditie' | 'algemeen'
@@ -20,6 +20,8 @@ export interface PlanRequest {
   preferredExercises: string[]
   /** Oefeningen die het schema moet vermijden. */
   avoidedExercises: string[]
+  /** Alleen oefeningen waar de gekozen spiergroep(en) primair target zijn. */
+  focusOnly: boolean
 }
 
 export interface PlanExercise {
@@ -57,9 +59,7 @@ export const WEEKDAY_SHORT = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo']
 export function exercisesForMinutes(minutes: number): number {
   if (minutes <= 35) return 4
   if (minutes <= 50) return 5
-  if (minutes <= 65) return 6
-  if (minutes <= 80) return 7
-  return 8
+  return 6
 }
 
 /** Verdeelt de trainingsdagen zo gelijkmatig mogelijk over de beschikbare weekdagen. */
@@ -295,6 +295,7 @@ export function parsePlanRequest(input: string): PlanRequest {
     detected,
     preferredExercises: [],
     avoidedExercises: [],
+    focusOnly: false,
   }
 }
 
@@ -455,6 +456,18 @@ function substituteBlockedDays(templates: DayTemplate[], lowerBodyBlocked: boole
   })
 }
 
+/** Primair target valt binnen de gevraagde focus-spieren (synergisten bij compound mogen mee). */
+function targetsFocusMuscles(exercise: ExerciseInfo, focusMuscles: MuscleId[]): boolean {
+  if (focusMuscles.length === 0) return true
+  const focusSet = new Set(focusMuscles)
+  const primaries = (Object.entries(exercise.muscles) as [MuscleId, number][])
+    .filter(([, value]) => value >= 0.5)
+    .map(([muscle]) => muscle)
+  if (primaries.some((muscle) => focusSet.has(muscle))) return true
+  const top = (Object.entries(exercise.muscles) as [MuscleId, number][]).sort((a, b) => b[1] - a[1])[0]
+  return top !== undefined && top[1] >= 0.35 && focusSet.has(top[0])
+}
+
 function isAllowed(exercise: ExerciseInfo, request: PlanRequest): boolean {
   const avoided = new Set(request.avoidedExercises.map((name) => name.toLowerCase()))
   if (avoided.has(exercise.name.toLowerCase())) return false
@@ -462,6 +475,9 @@ function isAllowed(exercise: ExerciseInfo, request: PlanRequest): boolean {
   // Vermijd oefeningen die een uitgesloten spier zwaar belasten (> 0.5)
   for (const muscle of request.excludedMuscles) {
     if ((exercise.muscles[muscle] ?? 0) > 0.5) return false
+  }
+  if (request.focusOnly && request.focusMuscles.length > 0) {
+    if (!targetsFocusMuscles(exercise, request.focusMuscles)) return false
   }
   return true
 }
@@ -479,7 +495,15 @@ function pickFromSlot(
   if (candidates.length === 0) return null
 
   const preferred = new Set(request.preferredExercises.map((name) => name.toLowerCase()))
-  return candidates.find((e) => preferred.has(e.name.toLowerCase())) ?? candidates[0]
+  const focusScore = (exercise: ExerciseInfo) =>
+    request.focusMuscles.reduce((sum, muscle) => sum + (exercise.muscles[muscle] ?? 0), 0)
+
+  return [...candidates].sort((a, b) => {
+    const aPreferred = preferred.has(a.name.toLowerCase()) ? 1 : 0
+    const bPreferred = preferred.has(b.name.toLowerCase()) ? 1 : 0
+    if (bPreferred !== aPreferred) return bPreferred - aPreferred
+    return focusScore(b) - focusScore(a)
+  })[0]
 }
 
 /** Beste extra oefeningen per spiergroep voor focus-volume. */
@@ -530,8 +554,7 @@ function applyFocus(
     let count = 0
     for (const day of ranked) {
       if (count >= Math.min(2, days.length)) break
-      // Focus mag iets boven de tijdslimiet uitkomen (max +2 oefeningen)
-      if (day.exercises.length >= maxExercises + 2) continue
+      if (day.exercises.length >= maxExercises) continue
       const candidate = pool.find((e) => !day.exercises.some((x) => x.name === e.name))
       if (!candidate) continue
       const reps = candidate.compound ? scheme.compound : scheme.isolation
@@ -567,7 +590,7 @@ function applyPreferred(
     )
 
     for (const day of ranked) {
-      if (day.exercises.length >= maxExercises + 1) continue
+      if (day.exercises.length >= maxExercises) continue
       const reps = info.compound ? scheme.compound : scheme.isolation
       day.exercises.push({ name: info.name, sets: reps.sets, reps: reps.reps })
       inPlan.add(info.name.toLowerCase())
@@ -586,6 +609,66 @@ const GOAL_TITLES: Record<Goal, string> = {
   algemeen: 'Algemeen fitnessschema',
 }
 
+/** Bouwt trainingsdagen uitsluitend uit oefeningen voor de gekozen focus-spieren. */
+function buildFocusOnlyDays(
+  request: PlanRequest,
+  effectiveDays: number,
+  maxExercises: number,
+  scheme: (typeof REP_SCHEMES)[Goal],
+): PlanDay[] {
+  const focusLabel = [...new Set(request.focusMuscles.map((m) => MUSCLE_LABELS[m]))].join(', ')
+  const seen = new Set<string>()
+  const candidates: ExerciseInfo[] = []
+
+  for (const name of request.preferredExercises) {
+    const info = getExerciseInfo(name)
+    if (info && isAllowed(info, request) && !seen.has(info.name.toLowerCase())) {
+      candidates.push(info)
+      seen.add(info.name.toLowerCase())
+    }
+  }
+  for (const muscle of request.focusMuscles) {
+    for (const name of FOCUS_POOL[muscle] ?? []) {
+      const info = getExerciseInfo(name)
+      if (info && isAllowed(info, request) && !seen.has(info.name.toLowerCase())) {
+        candidates.push(info)
+        seen.add(info.name.toLowerCase())
+      }
+    }
+  }
+  for (const info of EXERCISE_DB) {
+    if (!targetsFocusMuscles(info, request.focusMuscles) || !isAllowed(info, request)) continue
+    if (seen.has(info.name.toLowerCase())) continue
+    candidates.push(info)
+    seen.add(info.name.toLowerCase())
+  }
+
+  const days: PlanDay[] = Array.from({ length: effectiveDays }, (_, i) => ({
+    title: effectiveDays === 1 ? `Alleen ${focusLabel}` : `Focus ${i + 1}`,
+    focus: `Alleen ${focusLabel}`,
+    exercises: [],
+  }))
+
+  if (candidates.length === 0) return days
+
+  let cursor = 0
+  for (let round = 0; round < maxExercises; round++) {
+    for (let d = 0; d < effectiveDays; d++) {
+      if (days[d].exercises.length >= maxExercises) continue
+      for (let attempt = 0; attempt < candidates.length; attempt++) {
+        const exercise = candidates[cursor % candidates.length]
+        cursor++
+        if (days[d].exercises.some((e) => e.name === exercise.name)) continue
+        const reps = exercise.compound ? scheme.compound : scheme.isolation
+        days[d].exercises.push({ name: exercise.name, sets: reps.sets, reps: reps.reps })
+        break
+      }
+    }
+  }
+
+  return days
+}
+
 /** Genereert een volledig trainingsschema op basis van een geparste aanvraag. */
 export function generatePlan(request: PlanRequest): GeneratedPlan {
   const scheme = REP_SCHEMES[request.goal]
@@ -595,25 +678,34 @@ export function generatePlan(request: PlanRequest): GeneratedPlan {
     request.availableWeekdays.length > 0 ? request.availableWeekdays : [0, 1, 2, 3, 4, 5, 6]
   const effectiveDays = Math.min(request.daysPerWeek, availableWeekdays.length)
   const maxExercises = exercisesForMinutes(request.sessionMinutes)
-  const lowerBodyBlocked = (['quads', 'hamstrings'] as MuscleId[]).every((m) =>
-    request.excludedMuscles.includes(m),
-  )
-  const templates = substituteBlockedDays(templatesFor(effectiveDays), lowerBodyBlocked)
+  const focusOnlyMode = request.focusOnly && request.focusMuscles.length > 0
 
-  const days: PlanDay[] = templates.map((template) => {
-    const chosen: PlanExercise[] = []
-    for (const slot of template.slots) {
-      if (chosen.length >= maxExercises) break
-      const exercise = pickFromSlot(slot, request, chosen)
-      if (!exercise) continue
-      const reps = exercise.compound ? scheme.compound : scheme.isolation
-      chosen.push({ name: exercise.name, sets: reps.sets, reps: reps.reps })
-    }
-    return { title: template.title, focus: template.focus, exercises: chosen }
-  })
+  let days: PlanDay[]
+  let focusAdditions: string[] = []
 
-  // Extra volume voor gevraagde spiergroepen en voorkeursoefeningen
-  const focusAdditions = applyFocus(days, request, scheme, maxExercises)
+  if (focusOnlyMode) {
+    days = buildFocusOnlyDays(request, effectiveDays, maxExercises, scheme)
+  } else {
+    const lowerBodyBlocked = (['quads', 'hamstrings'] as MuscleId[]).every((m) =>
+      request.excludedMuscles.includes(m),
+    )
+    const templates = substituteBlockedDays(templatesFor(effectiveDays), lowerBodyBlocked)
+
+    days = templates.map((template) => {
+      const chosen: PlanExercise[] = []
+      for (const slot of template.slots) {
+        if (chosen.length >= maxExercises) break
+        const exercise = pickFromSlot(slot, request, chosen)
+        if (!exercise) continue
+        const reps = exercise.compound ? scheme.compound : scheme.isolation
+        chosen.push({ name: exercise.name, sets: reps.sets, reps: reps.reps })
+      }
+      return { title: template.title, focus: template.focus, exercises: chosen }
+    })
+
+    focusAdditions = applyFocus(days, request, scheme, maxExercises)
+  }
+
   const preferredAdditions = applyPreferred(days, request, scheme, maxExercises)
 
   // Weekindeling over beschikbare dagen
@@ -639,10 +731,29 @@ export function generatePlan(request: PlanRequest): GeneratedPlan {
   // Balansanalyse
   const balance = analyzeBalance(raw, request)
 
+  const focusLabels = request.focusMuscles.map((m) => MUSCLE_LABELS[m])
+  const preferenceParts: string[] = []
+  if (request.preferredExercises.length > 0) {
+    preferenceParts.push(`voorkeursoefeningen (${request.preferredExercises.join(', ')})`)
+  }
+  if (focusLabels.length > 0) {
+    preferenceParts.push(`focus op ${focusLabels.join(', ')}`)
+  }
+  const focusOnlyLabel = [...new Set(request.focusMuscles.map((m) => MUSCLE_LABELS[m]))].join(', ')
+  const summaryLead = focusOnlyMode
+    ? `Alleen oefeningen voor ${focusOnlyLabel}; andere spieren komen alleen mee als assistent bij de oefening. Maximaal ${maxExercises} oefeningen per sessie (${request.sessionMinutes} min).`
+    : preferenceParts.length > 0
+      ? `Schema opgebouwd rond ${preferenceParts.join(' en ')}, met maximaal ${maxExercises} oefeningen per sessie (${request.sessionMinutes} min).`
+      : `Gebalanceerd schema met maximaal ${maxExercises} oefeningen per sessie (${request.sessionMinutes} min), verdeeld over ${effectiveDays} trainingsdagen.`
+
   const reasoning = [
+    summaryLead,
     ...request.detected,
-    ...focusAdditions,
+    ...(focusOnlyMode
+      ? [`Alleen-focus modus: geen oefeningen buiten ${focusOnlyLabel} (synergisten bij compound-oefeningen zijn oké).`]
+      : []),
     ...preferredAdditions,
+    ...focusAdditions,
     `Maximaal ${maxExercises} oefeningen per training, passend bij ${request.sessionMinutes} minuten`,
     `Repbereik afgestemd op ${request.goal === 'algemeen' ? 'algemene fitness' : request.goal}: compound ${scheme.compound.reps} herhalingen, isolatie ${scheme.isolation.reps}`,
     `Split gekozen op basis van ${effectiveDays} dagen: ${days.map((d) => d.title).join(' / ')}`,
@@ -752,6 +863,7 @@ export function buildPlanFromManual(input: ManualPlanInput): GeneratedPlan {
     detected: ['Handmatig ingevuld schema'],
     preferredExercises: [],
     avoidedExercises: [],
+    focusOnly: false,
   }
   const balance = analyzeBalance(raw, request)
 
