@@ -85,12 +85,8 @@ export default function ProgressPage() {
   if (error) return <p className="py-12 text-center text-red-400">{error}</p>
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        section="Analytics"
-        title="Progressie"
-        description="Sterkte en volume per oefening."
-      />
+    <div className="app-page">
+      <PageHeader section="Analytics" title="Progressie" compact />
 
       {exerciseNames.length === 0 ? (
         <div className="card text-center">

@@ -3,10 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSchedule } from '../hooks/useSchedule'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { updateScheduleAssignments } from '../lib/api'
-import { computeAgenda, computeMonth, WEEKDAY_LABELS, WEEKDAY_SHORT } from '../lib/scheduling'
+import { computeAgenda, computeMonth, WEEKDAY_SHORT } from '../lib/scheduling'
 import PageHeader from '../components/PageHeader'
 import { AgendaActivatedNotice } from '../components/AgendaStatusBanner'
-import SchemaStoragePanel, { HiddenSchemasHint } from '../components/SchemaStoragePanel'
 
 export default function AgendaPage() {
   const navigate = useNavigate()
@@ -14,7 +13,7 @@ export default function AgendaPage() {
   const scheduleJustActivated = Boolean(
     (location.state as { scheduleActivated?: boolean } | null)?.scheduleActivated,
   )
-  const { schedule, setSchedule, loading, reload } = useSchedule()
+  const { schedule, setSchedule, loading } = useSchedule()
   const { workouts, loading: workoutsLoading } = useWorkouts()
   const [editingWeekday, setEditingWeekday] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
@@ -44,23 +43,17 @@ export default function AgendaPage() {
 
   if (!schedule || !agenda) {
     return (
-      <div className="space-y-5">
-        <PageHeader
-          section="Agenda"
-          title="Weekplanning"
-          description="Pas dagen aan naar wens. Gemiste trainingen schuiven vanzelf door."
-        />
+      <div className="app-page">
+        <PageHeader section="Agenda" title="Weekplanning" compact />
         <div className="card text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-xl">
             🗓️
           </div>
           <h2 className="font-semibold text-white">Nog geen actieve agenda</h2>
           <p className="mx-auto mt-1 max-w-xs text-sm text-slate-400">
-            Laat de AI Schema-Architect een schema maken en activeer dat als jouw weekagenda. Geef
-            daarbij aan welke dagen je niet kunt en hoeveel tijd je hebt.
+            Maak een schema en activeer dat als weekagenda.
           </p>
-          <HiddenSchemasHint />
-          <Link to="/planner" className="btn-primary mt-4 inline-block px-6">
+          <Link to="/planner" className="btn-primary mt-3 inline-block px-6">
             Schema maken
           </Link>
         </div>
@@ -93,110 +86,99 @@ export default function AgendaPage() {
     : 0
 
   return (
-    <div className="space-y-5">
+    <div className="app-page">
       {scheduleJustActivated && <AgendaActivatedNotice />}
 
-      <PageHeader
-        section="Agenda"
-        title="Weekplanning"
-        description="Pas dagen aan naar wens. Gemiste trainingen schuiven vanzelf door."
-      />
+      <PageHeader section="Agenda" title="Weekplanning" compact />
 
-      {/* Volgende training (rotatie, schuift mee bij gemiste dagen) */}
-      {agenda.next && (
-        <div className="card bg-gradient-to-br from-emerald-500/15 to-cyan-500/10">
-          <p className="section-title text-emerald-300/80">Volgende training</p>
-          <div className="mt-1 flex items-end justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">{agenda.next.planDay.title}</h2>
-              <p className="text-sm text-slate-300">{agenda.next.planDay.focus}</p>
+      <div className="card-tight bg-gradient-to-br from-emerald-500/15 to-cyan-500/10 px-3.5 py-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            {agenda.next ? (
+              <>
+                <p className="truncate text-sm font-bold text-white">{agenda.next.planDay.title}</p>
+                <p className="truncate text-xs text-slate-300">{agenda.next.planDay.focus}</p>
+              </>
+            ) : (
+              <p className="text-sm font-medium text-white">Deze week</p>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="shrink-0 text-[10px] tabular-nums text-slate-400">
+                {agenda.adherence.done}/{agenda.adherence.planned}
+              </span>
             </div>
-            <button onClick={() => startDay()} className="btn-primary px-5 py-2.5 text-sm">
+            {agenda.missed.length > 0 && (
+              <p className="mt-1 text-[10px] text-amber-400">
+                {agenda.missed.length} gemist — pak de volgende training op
+              </p>
+            )}
+          </div>
+          {agenda.next && (
+            <button onClick={() => startDay()} className="btn-primary shrink-0 px-4 py-2 text-xs">
               Start
             </button>
-          </div>
-          <p className="mt-2 text-xs text-slate-400">
-            {agenda.next.planDay.exercises.length} oefeningen · schuift automatisch mee als je een dag overslaat
-          </p>
+          )}
         </div>
-      )}
-
-      {/* Wekelijkse voortgang */}
-      <div className="card">
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium text-white">Deze week voltooid</span>
-          <span className="text-slate-400">
-            {agenda.adherence.done}/{agenda.adherence.planned} trainingen
-          </span>
-        </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {agenda.missed.length > 0 && (
-          <p className="mt-2 text-xs text-amber-400">
-            {agenda.missed.length} gemiste training{agenda.missed.length > 1 ? 'en' : ''} deze week — geen
-            stress, pak de volgende training gewoon op.
-          </p>
-        )}
       </div>
 
-      {/* Schakelaar week / maand */}
-      <div className="flex gap-1 rounded-2xl border border-white/10 bg-white/5 p-1">
+      <div className="flex gap-1 rounded-xl border border-white/10 bg-white/5 p-0.5">
         {(['week', 'maand'] as const).map((option) => (
           <button
             key={option}
             onClick={() => setView(option)}
-            className={`flex-1 rounded-xl py-2 text-xs font-semibold capitalize transition ${
+            className={`flex-1 rounded-lg py-1.5 text-[11px] font-semibold capitalize transition ${
               view === option ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950' : 'text-slate-300'
             }`}
           >
-            {option === 'week' ? 'Weekoverzicht' : 'Maandoverzicht'}
+            {option === 'week' ? 'Week' : 'Maand'}
           </button>
         ))}
       </div>
 
-      {/* Maandoverzicht */}
       {view === 'maand' && (
-        <section className="card">
-          <div className="mb-3 flex items-center justify-between">
+        <section className="card-tight px-3 py-3">
+          <div className="mb-2 flex items-center justify-between">
             <button
               onClick={() => setMonthOffset((o) => o - 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
             >
               ‹
             </button>
-            <p className="text-sm font-semibold capitalize text-white">
+            <p className="text-xs font-semibold capitalize text-white">
               {monthBase.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
             </p>
             <button
               onClick={() => setMonthOffset((o) => o + 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
             >
               ›
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1">
+          <div className="mb-0.5 grid grid-cols-7 gap-0.5">
             {WEEKDAY_SHORT.map((label) => (
-              <div key={label} className="text-center text-[10px] font-medium text-slate-500">
+              <div key={label} className="text-center text-[9px] font-medium text-slate-500">
                 {label}
               </div>
             ))}
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {monthWeeks.map((week, wi) => (
-              <div key={wi} className="grid grid-cols-7 gap-1">
+              <div key={wi} className="grid grid-cols-7 gap-0.5">
                 {week.map((day) => (
                   <button
                     key={day.date.toISOString()}
                     onClick={() => day.planDay && startDay()}
                     disabled={!day.planDay}
                     title={day.planDay ? day.planDay.title : 'Rustdag'}
-                    className={`flex aspect-square flex-col items-center justify-center rounded-lg text-[11px] transition ${
+                    className={`flex aspect-square flex-col items-center justify-center rounded-md text-[10px] transition ${
                       !day.inMonth ? 'opacity-30' : ''
                     } ${
                       day.done
@@ -206,42 +188,29 @@ export default function AgendaPage() {
                           : day.planDay
                             ? 'bg-white/10 text-white hover:bg-white/20'
                             : 'text-slate-600'
-                    } ${day.isToday ? 'ring-2 ring-cyan-400' : ''}`}
+                    } ${day.isToday ? 'ring-1 ring-cyan-400' : ''}`}
                   >
                     <span>{day.date.getDate()}</span>
-                    {day.planDay && <span className="h-1 w-1 rounded-full bg-current opacity-70" />}
                   </button>
                 ))}
               </div>
             ))}
           </div>
-
-          <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-slate-400">
-            <Legend className="bg-gradient-to-br from-emerald-400 to-cyan-400" label="Voltooid" />
-            <Legend className="bg-amber-500/40" label="Gemist" />
-            <Legend className="bg-white/20" label="Gepland" />
-            <Legend className="ring-2 ring-cyan-400" label="Vandaag" />
-          </div>
         </section>
       )}
 
-      {/* Weekoverzicht */}
       {view === 'week' && (
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="section-title">Weekoverzicht</h2>
-          {saving && <span className="text-[11px] text-slate-500">opslaan…</span>}
-        </div>
-        <div className="space-y-2">
+        <section className="space-y-1.5">
+          {saving && <p className="text-right text-[10px] text-slate-500">opslaan…</p>}
           {agenda.days.map((day) => (
             <div
               key={day.weekday}
-              className={`card-tight px-4 py-3 ${day.isToday ? 'ring-1 ring-emerald-400/40' : ''}`}
+              className={`agenda-day-row ${day.isToday ? 'ring-1 ring-emerald-400/40' : ''}`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <div
-                    className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl text-[11px] font-semibold ${
+                    className={`agenda-day-badge ${
                       day.planDay
                         ? 'bg-gradient-to-br from-emerald-400/20 to-cyan-400/20 text-emerald-300'
                         : 'bg-white/5 text-slate-500'
@@ -250,56 +219,47 @@ export default function AgendaPage() {
                     {day.shortLabel}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-white">
-                      {day.planDay ? day.planDay.title : 'Rustdag'}
-                      {day.isToday && <span className="ml-2 text-[11px] text-emerald-400">vandaag</span>}
+                    <p className="truncate text-sm font-medium text-white">
+                      {day.planDay ? day.planDay.title : 'Rust'}
+                      {day.isToday && <span className="ml-1.5 text-[10px] text-emerald-400">nu</span>}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {day.done
-                        ? '✓ Voltooid'
-                        : day.missed
-                          ? 'Gemist'
-                          : day.planDay
-                            ? day.planDay.focus
-                            : 'Herstel & rust'}
+                    <p className="truncate text-[11px] text-slate-500">
+                      {day.done ? '✓ Klaar' : day.missed ? 'Gemist' : day.planDay ? day.planDay.focus : 'Herstel'}
                     </p>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   {day.planDay && !day.done && (
                     <button
                       onClick={() => startDay()}
-                      className="rounded-lg bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/20"
+                      className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-white/20"
                     >
                       Start
                     </button>
                   )}
                   <button
                     onClick={() => setEditingWeekday(editingWeekday === day.weekday ? null : day.weekday)}
-                    className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] text-slate-300 transition hover:bg-white/5"
+                    className="rounded-lg border border-white/10 px-2 py-1 text-[10px] text-slate-300 transition hover:bg-white/5"
                   >
-                    Wijzig
+                    {editingWeekday === day.weekday ? '✕' : 'Wijzig'}
                   </button>
                 </div>
               </div>
 
               {editingWeekday === day.weekday && (
-                <div className="mt-3 border-t border-white/5 pt-3">
-                  <p className="mb-2 text-[11px] text-slate-400">
-                    Wat wil je op {WEEKDAY_LABELS[day.weekday].toLowerCase()} doen?
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="mt-2 border-t border-white/5 pt-2">
+                  <div className="flex flex-wrap gap-1">
                     <button
                       onClick={() => changeAssignment(day.weekday, null)}
-                      className={`chip ${day.planDay === null ? 'chip-active' : ''}`}
+                      className={`chip text-[11px] ${day.planDay === null ? 'chip-active' : ''}`}
                     >
-                      Rustdag
+                      Rust
                     </button>
                     {schedule.days.map((planDay, index) => (
                       <button
                         key={index}
                         onClick={() => changeAssignment(day.weekday, index)}
-                        className={`chip ${day.planDayIndex === index ? 'chip-active' : ''}`}
+                        className={`chip text-[11px] ${day.planDayIndex === index ? 'chip-active' : ''}`}
                       >
                         {planDay.title}
                       </button>
@@ -309,25 +269,8 @@ export default function AgendaPage() {
               )}
             </div>
           ))}
-        </div>
-      </section>
+        </section>
       )}
-
-      <Link to="/planner" className="btn-secondary block">
-        Nieuw schema maken
-      </Link>
-
-      <SchemaStoragePanel onChanged={reload} showHidden={false} embedded />
     </div>
   )
 }
-
-function Legend({ className, label }: { className: string; label: string }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`h-3 w-3 rounded ${className}`} />
-      {label}
-    </span>
-  )
-}
-

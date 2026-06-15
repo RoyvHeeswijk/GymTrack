@@ -13,8 +13,8 @@ export default function HistoryPage() {
   if (error) return <p className="py-12 text-center text-red-400">{error}</p>
 
   return (
-    <div className="space-y-5">
-      <PageHeader section="Historie" title="Trainingen" description="Al je sessies op een rij." />
+    <div className="app-page">
+      <PageHeader section="Historie" title="Trainingen" compact />
 
       {workouts.length === 0 ? (
         <div className="card text-center">

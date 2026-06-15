@@ -75,12 +75,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        section="App"
-        title="Instellingen"
-        description="Pas het gedrag van GymTrack aan tijdens het trainen."
-      />
+    <div className="app-page">
+      <PageHeader section="App" title="Instellingen" compact />
 
       <div className="card space-y-4">
         <SettingToggle

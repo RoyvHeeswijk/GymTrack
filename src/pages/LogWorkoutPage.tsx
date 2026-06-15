@@ -232,19 +232,6 @@ function collectExerciseNotes(blocks: ExerciseBlock[]): Record<string, string> {
   return notes
 }
 
-function countProgress(blocks: ExerciseBlock[], workouts: WorkoutWithSets[]) {
-  let filled = 0
-  let total = 0
-  for (const block of blocks) {
-    block.sets.forEach((row, index) => {
-      total += 1
-      const hint = lastSetHint(workouts, block.name, index + 1)
-      if (resolveSetValues(row, hint)) filled += 1
-    })
-  }
-  return { filled, total }
-}
-
 function prefillFromHistory(blocks: ExerciseBlock[], workouts: WorkoutWithSets[]): ExerciseBlock[] {
   return blocks.map((block) => ({
     ...block,
@@ -281,15 +268,6 @@ function LogNavArrowIcon({ direction }: { direction: 'left' | 'right' }) {
   )
 }
 
-function VolgordeIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-      <path d="M7 15l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 9l5-5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 const AUTOSAVE_MS = 3000
 
 export default function LogWorkoutPage() {
@@ -307,6 +285,8 @@ export default function LogWorkoutPage() {
   const [knownExercises, setKnownExercises] = useState<string[]>([])
   const [showAlternatives, setShowAlternatives] = useState(false)
   const [show3D, setShow3D] = useState(false)
+  const [showCoach, setShowCoach] = useState(false)
+  const [showNote, setShowNote] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showReorder, setShowReorder] = useState(false)
   const [sessionPlanDay, setSessionPlanDay] = useState<PlanDay | null>(null)
@@ -334,7 +314,6 @@ export default function LogWorkoutPage() {
   validSetsRef.current = validSets
   const exerciseNotes = useMemo(() => collectExerciseNotes(blocks), [blocks])
   exerciseNotesRef.current = exerciseNotes
-  const progress = useMemo(() => countProgress(blocks, workouts), [blocks, workouts])
 
   const executionSteps =
     recognized && settings.showCoachTips ? coachExecutionSteps(block.name) : []
@@ -350,6 +329,12 @@ export default function LogWorkoutPage() {
         return resolveSetValues(row, hint)
       }).length
     : 0
+
+  useEffect(() => {
+    setShowNote(Boolean(block?.note.trim()))
+    setShowCoach(false)
+    setShowAlternatives(false)
+  }, [currentIndex, block?.id, block?.note])
 
   async function initSession(day: PlanDay, mergeFrom?: ExerciseBlock[]) {
     if (!user || !schedule) return
@@ -528,16 +513,12 @@ export default function LogWorkoutPage() {
       navigate('/', { state: { saved: true } })
     } else {
       setCurrentIndex((i) => i + 1)
-      setShowAlternatives(false)
-      setShow3D(false)
       setShowMenu(false)
     }
   }
 
   function goPrev() {
     setCurrentIndex((i) => Math.max(0, i - 1))
-    setShowAlternatives(false)
-    setShow3D(false)
     setShowMenu(false)
   }
 
@@ -582,14 +563,14 @@ export default function LogWorkoutPage() {
   }
 
   return (
-    <div className="space-y-5 pb-36">
+    <div className="log-page">
       <datalist id="exercise-suggestions">
         {suggestions.map((name) => (
           <option key={name} value={name} />
         ))}
       </datalist>
 
-      <div className="flex items-center justify-between gap-3">
+      <header className="log-top">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span className="h-2 w-2 shrink-0 rounded-full bg-teal-400" />
           <span className="log-workout-label truncate">{workoutName}</span>
@@ -602,216 +583,226 @@ export default function LogWorkoutPage() {
             <span className="text-[10px] font-medium text-teal-400">Opgeslagen</span>
           )}
           <p className="log-progress-label">
-            Voortgang {progress.filled}/{progress.total}
+            {currentIndex + 1}/{blocks.length}
           </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="log-page-title">Training loggen</h1>
-        <button type="button" onClick={() => setShowReorder(true)} className="log-volgorde-btn">
-          <VolgordeIcon />
-          Volgorde
-        </button>
-      </div>
-
-      {block && (
-        <div className="log-exercise-card">
-          <div className="flex items-center justify-between">
-            <p className="log-exercise-meta">
-              Oefening {currentIndex + 1} / {blocks.length}
-            </p>
-            <div className="flex items-center gap-2">
-              <p className="log-exercise-meta">
-                {filledInBlock}/{block.sets.length} sets
-              </p>
-              <div className="relative">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowMenu((v) => !v)}
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#334155] bg-[#0f172a] text-base text-slate-400 hover:text-white"
+              aria-label="Meer opties"
+            >
+              ⋯
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full z-20 mt-1 min-w-[10.5rem] rounded-xl border border-[#334155] bg-[#1e293b] py-1 shadow-xl">
                 <button
                   type="button"
-                  onClick={() => setShowMenu((v) => !v)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#334155] bg-[#0f172a] text-lg text-slate-400 hover:text-white"
-                  aria-label="Meer opties"
+                  onClick={() => {
+                    setShowReorder(true)
+                    setShowMenu(false)
+                  }}
+                  className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
                 >
-                  ⋯
+                  Volgorde aanpassen
                 </button>
-                {showMenu && (
-                  <div className="absolute right-0 top-full z-20 mt-1 min-w-[10rem] rounded-xl border border-[#334155] bg-[#1e293b] py-1 shadow-xl">
-                    {recognized && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShow3D((v) => !v)
-                          setShowMenu(false)
-                        }}
-                        className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
-                      >
-                        {show3D ? 'Verberg 3D' : 'Toon 3D'}
-                      </button>
-                    )}
-                    {blocks.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={removeCurrentBlock}
-                        className="block w-full px-4 py-2 text-left text-xs text-red-400 hover:bg-white/5"
-                      >
-                        Oefening verwijderen
-                      </button>
-                    )}
-                  </div>
+                {recognized && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShow3D((v) => !v)
+                      setShowMenu(false)
+                    }}
+                    className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
+                  >
+                    {show3D ? 'Verberg 3D' : 'Toon 3D'}
+                  </button>
+                )}
+                {executionSteps.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCoach((v) => !v)
+                      setShowMenu(false)
+                    }}
+                    className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
+                  >
+                    {showCoach ? 'Verberg uitvoering' : 'Toon uitvoering'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNote((v) => !v)
+                    setShowMenu(false)
+                  }}
+                  className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
+                >
+                  {showNote ? 'Verberg notitie' : 'Notitie toevoegen'}
+                </button>
+                {blocks.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={removeCurrentBlock}
+                    className="block w-full px-4 py-2 text-left text-xs text-red-400 hover:bg-white/5"
+                  >
+                    Oefening verwijderen
+                  </button>
                 )}
               </div>
-            </div>
+            )}
           </div>
+        </div>
+      </header>
 
-          {recognized ? (
-            <h2 className="log-exercise-title">{recognized.name}</h2>
-          ) : (
-            <input
-              type="text"
-              list="exercise-suggestions"
-              value={block.name}
-              onChange={(e) => updateBlock(block.id, { name: e.target.value })}
-              placeholder="Oefening (bijv. benchen)"
-              className="log-exercise-title w-full bg-transparent outline-none placeholder:font-normal placeholder:text-slate-600"
-            />
-          )}
+      <div className="log-scroll space-y-2">
+        {block && (
+          <div className="log-exercise-card">
+            <div className="flex items-center justify-between gap-2">
+              <p className="log-exercise-meta truncate">
+                {filledInBlock}/{block.sets.length} sets ingevuld
+              </p>
+              {recognized && (
+                <span className="log-equipment-chip shrink-0">{EQUIPMENT_LABELS[recognized.equipment]}</span>
+              )}
+            </div>
 
-          {recognized && (
-            <span className="log-equipment-chip">{EQUIPMENT_LABELS[recognized.equipment]}</span>
-          )}
+            {recognized ? (
+              <h2 className="log-exercise-title">{recognized.name}</h2>
+            ) : (
+              <input
+                type="text"
+                list="exercise-suggestions"
+                value={block.name}
+                onChange={(e) => updateBlock(block.id, { name: e.target.value })}
+                placeholder="Oefening (bijv. benchen)"
+                className="log-exercise-title w-full bg-transparent outline-none placeholder:font-normal placeholder:text-slate-600"
+              />
+            )}
 
-          {recognized && settings.showMuscleFocus && muscleFocus && (
-            <div className="log-muscle-focus">
-              <p className="log-muscle-focus-label">Spierfocus</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+            {recognized && settings.showMuscleFocus && muscleFocus && (
+              <div className="flex flex-wrap gap-1">
                 {muscleFocus.primary.map((label) => (
                   <span key={label} className="log-muscle-chip log-muscle-chip--primary">
                     {label}
                   </span>
                 ))}
-                {muscleFocus.secondary.map((label) => (
+                {muscleFocus.secondary.slice(0, 2).map((label) => (
                   <span key={label} className="log-muscle-chip log-muscle-chip--secondary">
                     {label}
                   </span>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          <div>
-            <label htmlFor={`exercise-note-${block.id}`} className="log-exercise-meta">
-              Notitie
-            </label>
-            <textarea
-              id={`exercise-note-${block.id}`}
-              value={block.note}
-              onChange={(e) => updateBlock(block.id, { note: e.target.value })}
-              placeholder="Bijv. smalle greep, minder ROM, specifieke aanpassing…"
-              rows={2}
-              className="log-exercise-note mt-1.5"
-            />
-          </div>
+            {showNote && (
+              <textarea
+                id={`exercise-note-${block.id}`}
+                value={block.note}
+                onChange={(e) => updateBlock(block.id, { note: e.target.value })}
+                placeholder="Notitie…"
+                rows={2}
+                className="log-exercise-note"
+              />
+            )}
 
-          <div>
-            <div className="mb-2.5 grid grid-cols-[2rem_1fr_1fr] gap-2 px-0.5">
-              <span className="log-exercise-meta">#</span>
-              <span className="log-exercise-meta">Reps</span>
-              <span className="log-exercise-meta">Kg</span>
-            </div>
-
-            <div className="space-y-2.5">
-              {block.sets.map((row, setIndex) => {
-                const hint = lastSetHint(workouts, block.name, setIndex + 1)
-                return (
-                  <div key={row.id} className="grid grid-cols-[2rem_1fr_1fr] items-center gap-2">
-                    <span className="text-center text-sm font-bold text-slate-500">{setIndex + 1}</span>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      value={row.reps}
-                      placeholder={hint.reps || '—'}
-                      onChange={(e) => updateRow(block.id, row.id, { reps: e.target.value })}
-                      className="log-set-input"
-                      aria-label={`Set ${setIndex + 1} herhalingen`}
-                    />
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      step="0.5"
-                      value={row.weight}
-                      placeholder={hint.weight || '—'}
-                      onChange={(e) => updateRow(block.id, row.id, { weight: e.target.value })}
-                      className="log-set-input"
-                      aria-label={`Set ${setIndex + 1} gewicht`}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <button type="button" onClick={() => addSetToBlock(block.id)} className="log-add-set-btn">
-            + Set toevoegen
-          </button>
-        </div>
-      )}
-
-      {recognized && alternatives.length > 0 && (
-        <button type="button" onClick={() => setShowAlternatives((v) => !v)} className="log-alt-btn">
-          <span aria-hidden>⚠️</span>
-          Apparaat bezet? Toon alternatieven
-        </button>
-      )}
-
-      {showAlternatives && alternatives.length > 0 && (
-        <div className="space-y-2">
-          {alternatives.map((alt) => (
-            <div
-              key={alt.name}
-              className="flex items-center justify-between rounded-xl border border-[#334155] bg-[#1e293b] px-4 py-3"
-            >
-              <div>
-                <p className="text-sm font-medium text-white">{alt.name}</p>
-                <p className="text-xs text-slate-500">{EQUIPMENT_LABELS[alt.equipment]}</p>
+            <div>
+              <div className="mb-1.5 grid grid-cols-[1.75rem_1fr_1fr] gap-1.5 px-0.5">
+                <span className="log-exercise-meta">#</span>
+                <span className="log-exercise-meta">Reps</span>
+                <span className="log-exercise-meta">Kg</span>
               </div>
-              <button
-                type="button"
-                onClick={() => swapExercise(block.id, alt.name)}
-                className="rounded-xl bg-teal-400 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-teal-300"
-              >
-                Wissel
-              </button>
+
+              <div className="space-y-2">
+                {block.sets.map((row, setIndex) => {
+                  const hint = lastSetHint(workouts, block.name, setIndex + 1)
+                  return (
+                    <div key={row.id} className="grid grid-cols-[1.75rem_1fr_1fr] items-center gap-1.5">
+                      <span className="text-center text-xs font-bold text-slate-500">{setIndex + 1}</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={row.reps}
+                        placeholder={hint.reps || '—'}
+                        onChange={(e) => updateRow(block.id, row.id, { reps: e.target.value })}
+                        className="log-set-input"
+                        aria-label={`Set ${setIndex + 1} herhalingen`}
+                      />
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.5"
+                        value={row.weight}
+                        placeholder={hint.weight || '—'}
+                        onChange={(e) => updateRow(block.id, row.id, { weight: e.target.value })}
+                        className="log-set-input"
+                        aria-label={`Set ${setIndex + 1} gewicht`}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {executionSteps.length > 0 && (
-        <div className="log-coach-tip">
-          <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-            Uitvoering
-          </p>
-          <ol className="mt-2.5 space-y-1.5">
-            {executionSteps.map((step, index) => (
-              <li key={step} className="flex gap-2 text-sm leading-relaxed text-slate-300">
-                <span className="shrink-0 font-semibold text-teal-400/80">{index + 1}.</span>
-                <span>{step}</span>
-              </li>
+            <button type="button" onClick={() => addSetToBlock(block.id)} className="log-add-set-btn">
+              + Set
+            </button>
+          </div>
+        )}
+
+        {recognized && alternatives.length > 0 && (
+          <button type="button" onClick={() => setShowAlternatives((v) => !v)} className="log-alt-btn">
+            {showAlternatives ? 'Verberg alternatieven' : 'Apparaat bezet? Alternatieven'}
+          </button>
+        )}
+
+        {showAlternatives && alternatives.length > 0 && (
+          <div className="space-y-1.5">
+            {alternatives.map((alt) => (
+              <div
+                key={alt.name}
+                className="flex items-center justify-between rounded-xl border border-[#334155] bg-[#1e293b] px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-white">{alt.name}</p>
+                  <p className="text-[10px] text-slate-500">{EQUIPMENT_LABELS[alt.equipment]}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => swapExercise(block.id, alt.name)}
+                  className="shrink-0 rounded-lg bg-teal-400 px-2.5 py-1 text-[11px] font-bold text-slate-950 hover:bg-teal-300"
+                >
+                  Wissel
+                </button>
+              </div>
             ))}
-          </ol>
-        </div>
-      )}
+          </div>
+        )}
 
-      {show3D && recognized && (
-        <div className="overflow-hidden rounded-2xl border border-[#334155]">
-          <Body3D activation={recognized.muscles} height={240} showLegend={false} />
-        </div>
-      )}
+        {showCoach && executionSteps.length > 0 && (
+          <div className="log-coach-tip">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal-400">Uitvoering</p>
+            <ol className="mt-1.5 space-y-1">
+              {executionSteps.map((step, index) => (
+                <li key={step} className="flex gap-2 text-xs leading-snug text-slate-300">
+                  <span className="shrink-0 font-semibold text-teal-400/80">{index + 1}.</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
-      {error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
+        {show3D && recognized && (
+          <div className="overflow-hidden rounded-xl border border-[#334155]">
+            <Body3D activation={recognized.muscles} height={200} showLegend={false} />
+          </div>
+        )}
+
+        {error && <p className="rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>}
+      </div>
 
       {showReorder && (
         <div className="log-reorder-backdrop" onClick={() => setShowReorder(false)}>
@@ -865,8 +856,8 @@ export default function LogWorkoutPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-md px-5">
-        <div className="flex items-center gap-2.5">
+      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-md px-4">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={goPrev}
@@ -877,17 +868,12 @@ export default function LogWorkoutPage() {
             <LogNavArrowIcon direction="left" />
           </button>
           <button type="button" onClick={goNext} className="log-btn-next">
-            {isLastExercise ? 'Klaar' : 'Volgende oefening'}
+            {isLastExercise ? 'Klaar' : 'Volgende'}
           </button>
           <button
             type="button"
             onClick={() => {
-              if (!isLastExercise) {
-                setCurrentIndex((i) => i + 1)
-                setShowAlternatives(false)
-                setShow3D(false)
-                setShowMenu(false)
-              }
+              if (!isLastExercise) goNext()
             }}
             disabled={isLastExercise}
             className="log-nav-arrow"

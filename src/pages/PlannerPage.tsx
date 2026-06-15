@@ -7,11 +7,11 @@ export default function PlannerPage() {
   const { reload } = useSchedule()
 
   return (
-    <div className="space-y-5">
+    <div className="app-page">
       <PageHeader
         section="Schema"
-        title="Maak je trainingsschema"
-        description="Laat de AI een schema maken of vul zelf je bestaande schema in."
+        title="Trainingsschema"
+        compact
       />
 
       <SchemaStoragePanel onChanged={reload} />

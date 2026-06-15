@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useProfile } from '../hooks/useProfile'
 
 const tabs = [
@@ -11,7 +11,19 @@ const tabs = [
 
 export default function Layout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { initial } = useProfile()
+  const isHome = location.pathname === '/'
+  const isLog = location.pathname === '/loggen'
+  const isAgenda = location.pathname === '/agenda'
+  const mainClass = [
+    'app-main',
+    isHome && 'app-main-home',
+    isLog && 'app-main-log',
+    isAgenda && 'app-main-agenda',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div className="app-layout">
@@ -41,7 +53,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="app-main">
+      <main className={mainClass}>
         <Outlet />
       </main>
 

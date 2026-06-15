@@ -130,7 +130,25 @@ input[type="number"] {
     @apply rounded-xl bg-emerald-500/15 text-emerald-400;
   }
 
-  /* Workout log — Lovable-stijl */
+  /* Workout log — mobiel-first, compact */
+  .log-page {
+    @apply flex min-h-0 flex-1 flex-col gap-2 overflow-hidden;
+  }
+
+  .log-scroll {
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .log-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .log-top {
+    @apply flex shrink-0 items-center justify-between gap-2;
+  }
+
   .log-workout-label {
     @apply min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-slate-400 outline-none placeholder:text-slate-600;
   }
@@ -140,15 +158,15 @@ input[type="number"] {
   }
 
   .log-page-title {
-    @apply text-[1.65rem] font-bold leading-tight tracking-tight text-white;
+    @apply text-xl font-bold leading-tight tracking-tight text-white;
   }
 
   .log-volgorde-btn {
-    @apply inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-teal-400/40 hover:text-white;
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[#334155] bg-[#1e293b] px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:border-teal-400/40 hover:text-white;
   }
 
   .log-exercise-card {
-    @apply space-y-4 rounded-2xl bg-[#1e293b] p-5;
+    @apply space-y-3 rounded-2xl bg-[#1e293b] p-3.5;
   }
 
   .log-exercise-meta {
@@ -156,19 +174,19 @@ input[type="number"] {
   }
 
   .log-exercise-title {
-    @apply text-[1.75rem] font-bold leading-tight text-white;
+    @apply text-xl font-bold leading-tight text-white;
   }
 
   .log-equipment-chip {
-    @apply inline-flex rounded-full border border-[#334155] bg-[#0f172a] px-3 py-1 text-xs font-medium text-slate-400;
+    @apply inline-flex rounded-full border border-[#334155] bg-[#0f172a] px-2.5 py-0.5 text-[11px] font-medium text-slate-400;
   }
 
   .log-set-input {
-    @apply h-12 w-full rounded-xl border border-[#334155] bg-[#0f172a] px-2 text-center text-lg font-semibold tabular-nums text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
+    @apply h-10 w-full rounded-xl border border-[#334155] bg-[#0f172a] px-2 text-center text-base font-semibold tabular-nums text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
   }
 
   .log-set-check {
-    @apply flex h-12 w-12 items-center justify-center rounded-xl border border-[#334155] bg-[#0f172a] text-base font-bold text-transparent transition hover:border-teal-400/40;
+    @apply flex h-10 w-10 items-center justify-center rounded-xl border border-[#334155] bg-[#0f172a] text-base font-bold text-transparent transition hover:border-teal-400/40;
   }
 
   .log-set-check--done {
@@ -176,23 +194,23 @@ input[type="number"] {
   }
 
   .log-add-set-btn {
-    @apply w-full rounded-xl border border-dashed border-[#475569] py-3.5 text-sm font-medium text-slate-400 transition hover:border-teal-400/50 hover:text-teal-300;
+    @apply w-full rounded-xl border border-dashed border-[#475569] py-2.5 text-xs font-medium text-slate-400 transition hover:border-teal-400/50 hover:text-teal-300;
   }
 
   .log-alt-btn {
-    @apply flex w-full items-center justify-center gap-2 rounded-xl border border-[#334155] bg-[#1e293b] py-4 text-sm font-medium text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300;
+    @apply flex w-full items-center justify-center gap-2 rounded-xl border border-[#334155] bg-[#1e293b] py-2.5 text-xs font-medium text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300;
   }
 
   .log-coach-tip {
-    @apply rounded-2xl border border-teal-400/30 bg-teal-400/[0.04] p-4;
+    @apply rounded-xl border border-teal-400/30 bg-teal-400/[0.04] p-3;
   }
 
   .log-nav-arrow {
-    @apply flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#0a0e14] text-white/90 transition hover:border-white/20 hover:bg-[#12171f] active:scale-[0.97] disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-[#0a0e14];
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#0a0e14] text-white/90 transition hover:border-white/20 hover:bg-[#12171f] active:scale-[0.97] disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-[#0a0e14];
   }
 
   .log-btn-next {
-    @apply min-w-0 flex-1 rounded-2xl bg-teal-400 py-4 text-center text-base font-bold text-slate-950 transition hover:bg-teal-300 active:scale-[0.99] disabled:opacity-40;
+    @apply min-w-0 flex-1 rounded-2xl bg-teal-400 py-3 text-center text-sm font-bold text-slate-950 transition hover:bg-teal-300 active:scale-[0.99] disabled:opacity-40;
   }
 
   .log-reorder-backdrop {
@@ -212,7 +230,7 @@ input[type="number"] {
   }
 
   .log-muscle-focus {
-    @apply rounded-xl border border-[#334155] bg-[#0f172a]/80 p-3;
+    @apply rounded-xl border border-[#334155] bg-[#0f172a]/80 p-2.5;
   }
 
   .log-muscle-focus-label {
@@ -232,7 +250,15 @@ input[type="number"] {
   }
 
   .log-exercise-note {
-    @apply w-full resize-none rounded-xl border border-[#334155] bg-[#0f172a] px-3 py-2.5 text-sm leading-relaxed text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
+    @apply w-full resize-none rounded-xl border border-[#334155] bg-[#0f172a] px-3 py-2 text-sm leading-snug text-white outline-none transition placeholder:text-slate-500 focus:border-teal-400/50;
+  }
+
+  .agenda-day-row {
+    @apply rounded-xl border border-white/[0.07] bg-[#12171f] px-3 py-2.5;
+  }
+
+  .agenda-day-badge {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[10px] font-semibold;
   }
 
   /* Semantische helpers (instellingen, 3D-legenda) */
@@ -261,9 +287,45 @@ input[type="number"] {
   }
 
   .app-main {
-    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pb-24 pt-5;
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-24 pt-4;
     scrollbar-width: none;
     -ms-overflow-style: none;
+  }
+
+  .app-main-home {
+    @apply flex flex-col overflow-x-hidden overflow-y-auto pt-3;
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .app-main-home::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-main-log {
+    @apply flex flex-col overflow-hidden px-4 pt-2;
+    padding-bottom: max(6.25rem, calc(env(safe-area-inset-bottom) + 5.25rem));
+  }
+
+  .app-main-agenda {
+    @apply pt-3;
+  }
+
+  .app-page {
+    @apply space-y-3;
+  }
+
+  .dashboard-home {
+    @apply flex min-h-0 flex-1 flex-col gap-2;
+  }
+
+  .dashboard-streak {
+    @apply inline-flex items-center rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300;
+  }
+
+  .dashboard-toast {
+    @apply text-[10px];
   }
 
   .app-main::-webkit-scrollbar {
@@ -302,6 +364,24 @@ input[type="number"] {
 
   .legend-chip {
     @apply border border-white/10 bg-[#12171f] text-slate-300;
+  }
+
+  .body3d-canvas {
+    background-color: #dce3ed;
+  }
+
+  .body3d-canvas svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .body-chart-view-btn {
+    @apply rounded-full border border-white/10 bg-[#0e1218] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 transition hover:border-white/20 hover:text-slate-200;
+  }
+
+  .body-chart-view-btn-active {
+    @apply border-emerald-400/40 bg-emerald-500/15 text-emerald-400;
   }
 }
 
@@ -557,6 +637,27 @@ html.light .legend-chip {
   border-color: rgba(15, 23, 42, 0.1);
   background-color: #ffffff;
   color: #475569;
+}
+
+html.light .body3d-canvas {
+  background-color: #e2e8f0;
+}
+
+html.light .body-chart-view-btn {
+  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #ffffff;
+  color: #64748b;
+}
+
+html.light .body-chart-view-btn:hover {
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #334155;
+}
+
+html.light .body-chart-view-btn-active {
+  border-color: rgba(16, 185, 129, 0.35);
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
 }
 
 /* Log-pagina */
