@@ -47,10 +47,12 @@ Lokaal ontwikkelen: gebruik `.env` (kopieer van `.env.example`).
 
 Supabase Dashboard → **Authentication → URL Configuration**:
 
-- **Site URL**: je Vercel production URL
-- **Redirect URLs**: dezelfde URL + `https://*.vercel.app/**`
+- **Site URL**: `https://gym-track-bice.vercel.app`
+- **Redirect URLs** (één regel per URL):
+  - `https://gym-track-bice.vercel.app/**`
+  - `http://localhost:5173/**` *(optioneel, voor lokaal testen)*
 
-Nodig voor e-mailbevestiging bij registratie. Inloggen met wachtwoord werkt meestal direct.
+Zonder deze instelling sturen bevestigingsmails je naar `localhost`. De app geeft bij registratie ook `emailRedirectTo` door naar je Vercel-URL.
 
 ---
 

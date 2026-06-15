@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { getEmailConfirmRedirectUrl } from '../lib/authRedirect'
 import { supabase } from '../lib/supabase'
 
 export default function AuthPage() {
@@ -19,7 +20,13 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getEmailConfirmRedirectUrl(),
+          },
+        })
         if (error) throw error
         if (!data.session) {
           setInfo('Account aangemaakt. Bevestig je e-mailadres via de link in je inbox en log daarna in.')
