@@ -91,7 +91,7 @@ export default function AgendaPage() {
 
       <PageHeader section="Agenda" title="Weekplanning" compact />
 
-      <div className="card-tight bg-gradient-to-br from-emerald-500/15 to-cyan-500/10 px-3.5 py-3">
+      <div className="agenda-hero card-tight bg-gradient-to-br from-emerald-500/15 to-cyan-500/10 px-3.5 py-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {agenda.next ? (
@@ -127,7 +127,7 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 rounded-xl border border-white/10 bg-white/5 p-0.5">
+      <div className="agenda-view-toggle flex gap-1 rounded-xl border border-white/10 bg-white/5 p-0.5">
         {(['week', 'maand'] as const).map((option) => (
           <button
             key={option}
@@ -205,15 +205,13 @@ export default function AgendaPage() {
           {agenda.days.map((day) => (
             <div
               key={day.weekday}
-              className={`agenda-day-row ${day.isToday ? 'ring-1 ring-emerald-400/40' : ''}`}
+              className={`agenda-day-row card-tight ${day.isToday ? 'agenda-day-row--today ring-1 ring-emerald-400/40' : ''}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                   <div
                     className={`agenda-day-badge ${
-                      day.planDay
-                        ? 'bg-gradient-to-br from-emerald-400/20 to-cyan-400/20 text-emerald-300'
-                        : 'bg-white/5 text-slate-500'
+                      day.planDay ? 'agenda-day-badge--plan' : 'agenda-day-badge--rest'
                     }`}
                   >
                     {day.shortLabel}
@@ -232,14 +230,14 @@ export default function AgendaPage() {
                   {day.planDay && !day.done && (
                     <button
                       onClick={() => startDay()}
-                      className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-white/20"
+                      className="agenda-day-start rounded-lg px-2 py-1 text-[10px] font-semibold transition"
                     >
                       Start
                     </button>
                   )}
                   <button
                     onClick={() => setEditingWeekday(editingWeekday === day.weekday ? null : day.weekday)}
-                    className="rounded-lg border border-white/10 px-2 py-1 text-[10px] text-slate-300 transition hover:bg-white/5"
+                    className="agenda-day-edit rounded-lg border px-2 py-1 text-[10px] transition"
                   >
                     {editingWeekday === day.weekday ? '✕' : 'Wijzig'}
                   </button>

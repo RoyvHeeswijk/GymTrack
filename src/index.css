@@ -254,7 +254,23 @@ input[type="number"] {
   }
 
   .agenda-day-row {
-    @apply rounded-xl border border-white/[0.07] bg-[#12171f] px-3 py-2.5;
+    @apply px-3 py-2.5;
+  }
+
+  .agenda-day-badge--plan {
+    @apply bg-gradient-to-br from-emerald-400/20 to-cyan-400/20 text-emerald-300;
+  }
+
+  .agenda-day-badge--rest {
+    @apply bg-white/5 text-slate-500;
+  }
+
+  .agenda-day-start {
+    @apply bg-white/10 text-white hover:bg-white/20;
+  }
+
+  .agenda-day-edit {
+    @apply border-white/10 text-slate-300 hover:bg-white/5;
   }
 
   .agenda-day-badge {
@@ -769,4 +785,55 @@ html.light .agenda-status-link:hover {
 
 html.light .agenda-status-link-action {
   color: #047857;
+}
+
+/* Agenda / weekplanning — dagmodus */
+html.light .agenda-hero {
+  border-color: rgba(16, 185, 129, 0.18);
+  background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.06));
+}
+
+html.light .agenda-view-toggle {
+  border-color: rgba(15, 23, 42, 0.1);
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .agenda-day-row--today {
+  --tw-ring-color: rgba(16, 185, 129, 0.35);
+}
+
+html.light .agenda-day-badge--plan {
+  background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.1));
+  color: #059669;
+}
+
+html.light .agenda-day-badge--rest {
+  background-color: rgba(15, 23, 42, 0.05);
+  color: #64748b;
+}
+
+html.light .agenda-day-start {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+html.light .agenda-day-start:hover {
+  background-color: rgba(16, 185, 129, 0.16);
+}
+
+html.light .agenda-day-edit {
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #475569;
+}
+
+html.light .agenda-day-edit:hover {
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .text-emerald-400 {
+  color: #059669;
+}
+
+html.light .text-amber-400 {
+  color: #b45309;
 }
