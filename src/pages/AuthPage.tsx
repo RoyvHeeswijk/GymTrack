@@ -42,13 +42,10 @@ export default function AuthPage() {
   return (
     <div className="app-scroll flex flex-col justify-center px-6 py-12">
       <div className="mb-10 text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/10 text-2xl">
-          🏋️
-        </div>
-        <h1 className="text-2xl font-bold tracking-[0.12em] text-white">
+        <h1 className="app-logo text-3xl font-bold tracking-[0.12em]">
           GYM<span className="gradient-text">TRACK</span>
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-3 text-sm text-slate-400">
           Plan slim. Train visueel. Begrijp je progressie.
         </p>
       </div>
