@@ -19,6 +19,8 @@ body,
   max-height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 
 #root {
@@ -328,14 +330,14 @@ input[type="number"] {
   }
 
   .app-main {
-    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pb-24 pt-4;
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4;
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
   .app-main-home {
     @apply flex flex-col overflow-x-hidden overflow-y-auto pt-3;
-    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -346,7 +348,6 @@ input[type="number"] {
 
   .app-main-log {
     @apply flex flex-col overflow-hidden px-4 pt-2;
-    padding-bottom: max(6.25rem, calc(env(safe-area-inset-bottom) + 5.25rem));
   }
 
   .app-main-agenda {
@@ -379,6 +380,10 @@ input[type="number"] {
     -ms-overflow-style: none;
   }
 
+  html.ios-standalone .app-scroll {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   .app-scroll::-webkit-scrollbar {
     display: none;
   }
@@ -389,10 +394,14 @@ input[type="number"] {
 
   .app-header {
     @apply border-white/[0.06] bg-[#0a0e14]/95;
+    padding-top: max(1rem, env(safe-area-inset-top, 0px));
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
   }
 
   .app-nav {
     @apply border-white/[0.06] bg-[#0a0e14]/95;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .app-logo {
@@ -435,6 +444,25 @@ html.light,
 html.light body {
   background-color: #f1f5f9;
   color: #0f172a;
+}
+
+/* iOS PWA: body/nav achtergrond vult home-indicator zone */
+html.ios-standalone,
+html.ios-standalone body {
+  background-color: #0a0e14;
+}
+
+html.ios-standalone .app-nav {
+  background-color: rgba(10, 14, 20, 0.95);
+}
+
+html.light.ios-standalone,
+html.light.ios-standalone body {
+  background-color: #f8fafc;
+}
+
+html.light.ios-standalone .app-nav {
+  background-color: rgba(248, 250, 252, 0.95);
 }
 
 html.light .app-bg {

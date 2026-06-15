@@ -27,7 +27,7 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <header className="app-header z-20 flex shrink-0 items-center justify-between border-b px-5 py-4 backdrop-blur-md">
+      <header className="app-header z-20 flex shrink-0 items-center justify-between border-b px-5 pb-4 backdrop-blur-md">
         <button onClick={() => navigate('/')} className="flex items-center gap-2">
           <span className="app-logo text-lg font-bold tracking-[0.12em]">
             GYM<span className="gradient-text">TRACK</span>
@@ -59,15 +59,14 @@ export default function Layout() {
 
       {/* Aura-stijl: vlakke bottom bar, actieve tab als pill */}
       <nav className="app-nav fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t backdrop-blur-md">
-        <div className="flex items-center justify-around px-2 pb-[max(env(safe-area-inset-bottom),0.625rem)] pt-2">
+        <div className="flex items-center justify-around px-2 py-2">
           {tabs.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] font-semibold uppercase tracking-wide transition ${
-                  isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
+                `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] font-semibold uppercase tracking-wide transition ${isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
                 }`
               }
             >
