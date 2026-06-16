@@ -11,7 +11,17 @@ const tabs = [
 
 export default function BottomNav() {
   return createPortal(
-    <nav className="bottom-nav" aria-label="Hoofdnavigatie">
+    <nav
+      className="bottom-nav"
+      aria-label="Hoofdnavigatie"
+      style={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10000,
+      }}
+    >
       <div className="bottom-nav-inner mx-auto flex max-w-md items-center justify-around px-2">
         {tabs.map(({ to, label, icon: Icon }) => (
           <NavLink

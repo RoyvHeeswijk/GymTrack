@@ -16,21 +16,27 @@ html {
 
 html,
 body {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 html,
 body,
 #root {
   background-color: #0a0e14;
-  overscroll-behavior: none;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
+  inset: 0;
   -webkit-font-smoothing: antialiased;
   color: #e2e8f0;
   font-family: var(--font-sans);
@@ -44,10 +50,11 @@ body {
 }
 
 #root {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  overflow: hidden;
 }
 
 /* Subtiele diepte — vlakker dan voorheen, Aura-achtig */
@@ -390,7 +397,7 @@ input[type="number"] {
 
   .app,
   .app-shell {
-    @apply flex min-h-dvh w-full flex-col text-slate-100;
+    @apply flex min-h-0 w-full flex-1 flex-col overflow-hidden text-slate-100;
   }
 
   .app-layout {
@@ -516,16 +523,19 @@ input[type="number"] {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 9999;
-    height: 80px;
+    z-index: 10000;
+    box-sizing: border-box;
+    height: calc(80px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-sizing: content-box;
+    margin: 0;
     background: #050b16;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .bottom-nav-inner {
+    box-sizing: border-box;
     height: 80px;
+    min-height: 80px;
   }
 
   .app-logo {
@@ -573,7 +583,7 @@ html.light body {
 /* iOS PWA: body/nav-shell achtergrond vult home-indicator zone */
 html.ios-standalone,
 html.ios-standalone body {
-  background-color: #0a0e14;
+  background-color: #050b16;
 }
 
 html.ios-standalone .bottom-nav {
