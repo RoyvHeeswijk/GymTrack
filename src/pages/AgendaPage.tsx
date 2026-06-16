@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSchedule } from '../hooks/useSchedule'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { updateScheduleAssignments } from '../lib/api'
-import { computeAgenda, computeMonth, WEEKDAY_SHORT } from '../lib/scheduling'
+import { computeAgenda, computeMonth, WEEKDAY_SHORT, type MonthDay } from '../lib/scheduling'
 import PageHeader from '../components/PageHeader'
 import { AgendaActivatedNotice } from '../components/AgendaStatusBanner'
 
@@ -19,6 +19,7 @@ export default function AgendaPage() {
   const [saving, setSaving] = useState(false)
   const [view, setView] = useState<'week' | 'maand'>('week')
   const [monthOffset, setMonthOffset] = useState(0)
+  const [selectedMonthDay, setSelectedMonthDay] = useState<MonthDay | null>(null)
 
   const agenda = useMemo(
     () => (schedule ? computeAgenda(schedule, workouts) : null),
@@ -143,7 +144,10 @@ export default function AgendaPage() {
         {(['week', 'maand'] as const).map((option) => (
           <button
             key={option}
-            onClick={() => setView(option)}
+            onClick={() => {
+              setView(option)
+              setSelectedMonthDay(null)
+            }}
             className={`flex-1 rounded-lg py-1 text-[11px] font-semibold capitalize transition ${
               view === option ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950' : 'text-slate-300'
             }`}
@@ -153,11 +157,70 @@ export default function AgendaPage() {
         ))}
       </div>
 
+      {view === 'maand' && selectedMonthDay?.planDay && (
+        <>
+          <button
+            type="button"
+            className="agenda-edit-backdrop"
+            aria-label="Sluit dagdetails"
+            onClick={() => setSelectedMonthDay(null)}
+          />
+          <div className="agenda-edit-panel agenda-month-day-panel">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  {selectedMonthDay.date.toLocaleDateString('nl-NL', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })}
+                </p>
+                <p className="agenda-hero-title mt-0.5">{selectedMonthDay.planDay.title}</p>
+                <p className="agenda-hero-subtitle mt-0.5">{selectedMonthDay.planDay.focus}</p>
+                <p
+                  className={`mt-1 text-[10px] font-medium ${
+                    selectedMonthDay.done
+                      ? 'text-emerald-400'
+                      : selectedMonthDay.missed
+                        ? 'text-amber-400'
+                        : 'text-slate-400'
+                  }`}
+                >
+                  {selectedMonthDay.done ? '✓ Afgerond' : selectedMonthDay.missed ? 'Gemist' : 'Gepland'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMonthDay(null)}
+                className="shrink-0 rounded-lg border border-white/10 px-2 py-0.5 text-[10px] text-slate-400 transition hover:bg-white/5"
+              >
+                Sluit
+              </button>
+            </div>
+            {!selectedMonthDay.done && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMonthDay(null)
+                  startDay()
+                }}
+                className="btn-primary w-full py-2 text-xs"
+              >
+                Start training
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
       {view === 'maand' && (
         <section className="agenda-month card-tight flex min-h-0 flex-1 flex-col px-2 py-2">
           <div className="mb-1 flex shrink-0 items-center justify-between">
             <button
-              onClick={() => setMonthOffset((o) => o - 1)}
+              onClick={() => {
+                setMonthOffset((o) => o - 1)
+                setSelectedMonthDay(null)
+              }}
               className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
             >
               ‹
@@ -166,7 +229,10 @@ export default function AgendaPage() {
               {monthBase.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
             </p>
             <button
-              onClick={() => setMonthOffset((o) => o + 1)}
+              onClick={() => {
+                setMonthOffset((o) => o + 1)
+                setSelectedMonthDay(null)
+              }}
               className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/5"
             >
               ›
@@ -187,11 +253,15 @@ export default function AgendaPage() {
                 {week.map((day) => (
                   <button
                     key={day.date.toISOString()}
-                    onClick={() => day.planDay && startDay()}
+                    onClick={() => day.planDay && setSelectedMonthDay(day)}
                     disabled={!day.planDay}
-                    title={day.planDay ? day.planDay.title : 'Rustdag'}
+                    title={day.planDay ? `${day.planDay.title} — ${day.planDay.focus}` : 'Rustdag'}
                     className={`flex min-h-0 flex-col items-center justify-center rounded-md text-[9px] transition ${
                       !day.inMonth ? 'opacity-30' : ''
+                    } ${
+                      selectedMonthDay?.date.getTime() === day.date.getTime()
+                        ? 'ring-2 ring-emerald-400'
+                        : ''
                     } ${
                       day.done
                         ? 'bg-gradient-to-br from-emerald-400 to-cyan-400 font-semibold text-slate-950'
