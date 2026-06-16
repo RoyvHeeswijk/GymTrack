@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { useProfile } from '../hooks/useProfile'
 
 const tabs = [
@@ -26,63 +27,67 @@ export default function Layout() {
     .join(' ')
 
   return (
-    <div className="app-layout">
-      <header className="app-header z-20 flex shrink-0 items-center justify-between border-b px-5 pb-4 backdrop-blur-md">
-        <button onClick={() => navigate('/')} className="flex items-center gap-2">
-          <span className="app-logo text-lg font-bold tracking-[0.12em]">
-            GYM<span className="gradient-text">TRACK</span>
-          </span>
-        </button>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/instellingen')}
-            className="app-icon-btn flex h-9 w-9 items-center justify-center rounded-full border text-slate-400 transition hover:text-white"
-            title="Instellingen"
-            aria-label="Instellingen"
-          >
-            <SettingsIcon />
+    <>
+      <div className="app-layout">
+        <header className="app-header z-20 flex shrink-0 items-center justify-between border-b px-5 pb-4 backdrop-blur-md">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2">
+            <span className="app-logo text-lg font-bold tracking-[0.12em]">
+              GYM<span className="gradient-text">TRACK</span>
+            </span>
           </button>
-          <button
-            onClick={() => navigate('/account')}
-            className="app-icon-btn flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold text-emerald-400 transition hover:border-emerald-400/30"
-            title="Mijn account"
-            aria-label="Mijn account"
-          >
-            {initial}
-          </button>
-        </div>
-      </header>
-
-      <main className={mainClass}>
-        <Outlet />
-      </main>
-
-      {/* Aura-stijl: vlakke bottom bar, actieve tab als pill */}
-      <div className="app-nav-shell">
-        <nav className="app-nav mx-auto max-w-md">
-          <div className="app-nav-tabs flex items-center justify-around px-2">
-            {tabs.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) =>
-                  `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold uppercase tracking-wide transition ${isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon active={isActive} />
-                    <span className="mt-0.5">{label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/instellingen')}
+              className="app-icon-btn flex h-9 w-9 items-center justify-center rounded-full border text-slate-400 transition hover:text-white"
+              title="Instellingen"
+              aria-label="Instellingen"
+            >
+              <SettingsIcon />
+            </button>
+            <button
+              onClick={() => navigate('/account')}
+              className="app-icon-btn flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold text-emerald-400 transition hover:border-emerald-400/30"
+              title="Mijn account"
+              aria-label="Mijn account"
+            >
+              {initial}
+            </button>
           </div>
-        </nav>
+        </header>
+
+        <main className={mainClass}>
+          <Outlet />
+        </main>
       </div>
-    </div>
+
+      {createPortal(
+        <div className="app-nav-shell">
+          <nav className="app-nav mx-auto max-w-md" aria-label="Hoofdnavigatie">
+            <div className="app-nav-tabs flex items-center justify-around px-2">
+              {tabs.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/'}
+                  className={({ isActive }) =>
+                    `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold uppercase tracking-wide transition ${isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon active={isActive} />
+                      <span className="mt-0.5">{label}</span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </nav>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
 

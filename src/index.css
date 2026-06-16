@@ -37,7 +37,7 @@ body {
 }
 
 :root {
-  --app-nav-tabs-height: 3rem;
+  --app-nav-tabs-height: 3.5rem;
   --app-nav-height: calc(var(--app-nav-tabs-height) + env(safe-area-inset-bottom, 0px));
 }
 
@@ -424,8 +424,9 @@ input[type="number"] {
   }
 
   .app-nav-shell {
-    @apply fixed inset-x-0 z-20 border-t border-white/[0.06] bg-[#0a0e14]/95 backdrop-blur-md;
-    bottom: env(safe-area-inset-bottom, 0px);
+    @apply fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.06];
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background-color: #0a0e14;
   }
 
   .app-nav {
@@ -433,6 +434,7 @@ input[type="number"] {
   }
 
   .app-nav-tabs {
+    min-height: var(--app-nav-tabs-height);
     @apply py-1.5;
   }
 
@@ -485,7 +487,7 @@ html.ios-standalone body {
 }
 
 html.ios-standalone .app-nav-shell {
-  background-color: rgba(10, 14, 20, 0.98);
+  background-color: #0a0e14;
 }
 
 html.light.ios-standalone,
@@ -494,8 +496,13 @@ html.light.ios-standalone body {
 }
 
 html.light.ios-standalone .app-nav-shell {
-  background-color: rgba(248, 250, 252, 0.98);
+  background-color: #f8fafc;
   border-color: rgba(15, 23, 42, 0.08);
+}
+
+html.light .app-nav-shell {
+  border-color: rgba(15, 23, 42, 0.08);
+  background-color: #f8fafc;
 }
 
 html.light .app-bg {
@@ -512,7 +519,7 @@ html.light .app-shell {
 html.light .app-header,
 html.light .app-nav-shell {
   border-color: rgba(15, 23, 42, 0.08);
-  background-color: rgba(248, 250, 252, 0.95);
+  background-color: #f8fafc;
 }
 
 html.light .app-logo {
