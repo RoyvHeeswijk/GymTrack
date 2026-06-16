@@ -15,13 +15,15 @@ html {
 }
 
 html,
+body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+html,
 body,
 #root {
   background-color: #0a0e14;
-  height: 100%;
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
@@ -29,21 +31,21 @@ body,
 
 body {
   margin: 0;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
   -webkit-font-smoothing: antialiased;
   color: #e2e8f0;
   font-family: var(--font-sans);
 }
 
 :root {
-  --app-nav-tabs-height: 3.5rem;
-  --app-nav-height: calc(var(--app-nav-tabs-height) + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-height: 80px;
+  --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 #root {
   display: flex;
   flex-direction: column;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 /* Subtiele diepte — vlakker dan voorheen, Aura-achtig */
@@ -332,36 +334,37 @@ input[type="number"] {
     @apply ring-white/5;
   }
 
+  .app,
   .app-shell {
-    @apply flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden text-slate-100;
+    @apply flex min-h-dvh w-full flex-col text-slate-100;
   }
 
   .app-layout {
-    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+    @apply flex min-h-dvh flex-1 flex-col;
   }
 
-  .app-main {
+  .page-content {
     @apply flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4;
-    padding-bottom: var(--app-nav-height);
+    padding-bottom: var(--bottom-nav-offset);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .app-main-home {
+  .page-content-home {
     @apply flex flex-col overflow-x-hidden overflow-y-auto pt-3;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .app-main-home::-webkit-scrollbar {
+  .page-content-home::-webkit-scrollbar {
     display: none;
   }
 
-  .app-main-log {
+  .page-content-log {
     @apply flex flex-col overflow-hidden px-4 pt-2;
   }
 
-  .app-main-agenda {
+  .page-content-agenda {
     @apply pt-3;
   }
 
@@ -379,7 +382,7 @@ input[type="number"] {
   }
 
   .log-workout-fab {
-    bottom: var(--app-nav-height);
+    bottom: var(--bottom-nav-offset);
   }
 
   .dashboard-home {
@@ -394,7 +397,7 @@ input[type="number"] {
     @apply text-[10px];
   }
 
-  .app-main::-webkit-scrollbar {
+  .page-content::-webkit-scrollbar {
     display: none;
   }
 
@@ -413,7 +416,7 @@ input[type="number"] {
   }
 
   .app-screen {
-    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+    @apply flex min-h-dvh flex-1 flex-col;
   }
 
   .app-header {
@@ -423,19 +426,21 @@ input[type="number"] {
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
   }
 
-  .app-nav-shell {
-    @apply fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.06];
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    height: var(--bottom-nav-height);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background-color: #0a0e14;
+    background: #050b16;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: content-box;
   }
 
-  .app-nav {
-    @apply border-0 bg-transparent;
-  }
-
-  .app-nav-tabs {
-    min-height: var(--app-nav-tabs-height);
-    @apply py-1.5;
+  .bottom-nav-inner {
+    height: var(--bottom-nav-height);
   }
 
   .app-logo {
@@ -486,8 +491,8 @@ html.ios-standalone body {
   background-color: #0a0e14;
 }
 
-html.ios-standalone .app-nav-shell {
-  background-color: #0a0e14;
+html.ios-standalone .bottom-nav {
+  background-color: #050b16;
 }
 
 html.light.ios-standalone,
@@ -495,12 +500,12 @@ html.light.ios-standalone body {
   background-color: #f8fafc;
 }
 
-html.light.ios-standalone .app-nav-shell {
+html.light.ios-standalone .bottom-nav {
   background-color: #f8fafc;
   border-color: rgba(15, 23, 42, 0.08);
 }
 
-html.light .app-nav-shell {
+html.light .bottom-nav {
   border-color: rgba(15, 23, 42, 0.08);
   background-color: #f8fafc;
 }
@@ -512,12 +517,13 @@ html.light .app-bg {
     radial-gradient(40rem 40rem at -20% 100%, rgba(6, 182, 212, 0.05), transparent 45%);
 }
 
+html.light .app,
 html.light .app-shell {
   color: #0f172a;
 }
 
 html.light .app-header,
-html.light .app-nav-shell {
+html.light .bottom-nav {
   border-color: rgba(15, 23, 42, 0.08);
   background-color: #f8fafc;
 }
