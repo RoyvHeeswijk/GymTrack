@@ -37,6 +37,8 @@ body {
 }
 
 :root {
+  --top-bar-height: 56px;
+  --top-bar-offset: calc(var(--top-bar-height) + env(safe-area-inset-top, 0px));
   --bottom-nav-height: 80px;
   --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
@@ -269,8 +271,60 @@ input[type="number"] {
   }
 
   .agenda-day-row {
-    @apply rounded-xl border border-white/[0.07] px-3 py-2.5;
+    @apply rounded-xl border border-white/[0.07] px-3 py-1.5;
     background-color: #12171f;
+  }
+
+  .agenda-day-badge--compact {
+    @apply h-8 w-8 text-[9px];
+  }
+
+  .agenda-page {
+    @apply h-full gap-1 overflow-hidden;
+  }
+
+  .agenda-page-header .page-title {
+    @apply text-lg;
+  }
+
+  .agenda-week {
+    @apply min-h-0 flex-1;
+  }
+
+  .agenda-month {
+    @apply min-h-0 flex-1;
+  }
+
+  .agenda-month-grid {
+    @apply min-h-0 flex-1;
+  }
+
+  .agenda-month-week {
+    @apply min-h-0 flex-1;
+  }
+
+  .agenda-edit-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    border: 0;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: default;
+  }
+
+  .agenda-edit-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--bottom-nav-offset);
+    z-index: 9999;
+    margin: 0 auto;
+    max-width: 28rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #12171f;
+    padding: 0.75rem 1rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
   .agenda-day-title {
@@ -344,14 +398,16 @@ input[type="number"] {
   }
 
   .page-content {
-    @apply flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4;
+    @apply flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4;
+    padding-top: calc(var(--top-bar-offset) + 0.75rem);
     padding-bottom: var(--bottom-nav-offset);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
   .page-content-home {
-    @apply flex flex-col overflow-x-hidden overflow-y-auto pt-3;
+    @apply flex flex-col overflow-x-hidden overflow-y-auto;
+    padding-top: calc(var(--top-bar-offset) + 0.5rem);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -361,11 +417,17 @@ input[type="number"] {
   }
 
   .page-content-log {
-    @apply flex flex-col overflow-hidden px-4 pt-2;
+    @apply flex flex-col overflow-hidden px-4;
+    padding-top: calc(var(--top-bar-offset) + 0.5rem);
   }
 
   .page-content-agenda {
-    @apply pt-3;
+    overflow: hidden;
+    box-sizing: border-box;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-top: calc(var(--top-bar-offset) + 0.5rem);
+    padding-bottom: var(--bottom-nav-offset);
   }
 
   .app-page {
@@ -421,9 +483,25 @@ input[type="number"] {
 
   .app-header {
     @apply border-white/[0.06] bg-[#0a0e14]/95;
-    padding-top: max(1rem, env(safe-area-inset-top, 0px));
     padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+
+  .top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    height: var(--top-bar-height);
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: content-box;
+    background: #0a0e14;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .top-bar-inner {
+    height: var(--top-bar-height);
   }
 
   .bottom-nav {
@@ -495,6 +573,10 @@ html.ios-standalone .bottom-nav {
   background-color: #050b16;
 }
 
+html.ios-standalone .top-bar {
+  background-color: #0a0e14;
+}
+
 html.light.ios-standalone,
 html.light.ios-standalone body {
   background-color: #f8fafc;
@@ -505,7 +587,17 @@ html.light.ios-standalone .bottom-nav {
   border-color: rgba(15, 23, 42, 0.08);
 }
 
+html.light.ios-standalone .top-bar {
+  background-color: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
 html.light .bottom-nav {
+  border-color: rgba(15, 23, 42, 0.08);
+  background-color: #f8fafc;
+}
+
+html.light .top-bar {
   border-color: rgba(15, 23, 42, 0.08);
   background-color: #f8fafc;
 }
@@ -523,6 +615,7 @@ html.light .app-shell {
 }
 
 html.light .app-header,
+html.light .top-bar,
 html.light .bottom-nav {
   border-color: rgba(15, 23, 42, 0.08);
   background-color: #f8fafc;
@@ -959,6 +1052,15 @@ html.light .agenda-day-edit {
 
 html.light .agenda-day-edit:hover {
   background-color: rgba(15, 23, 42, 0.04);
+}
+
+html.light .agenda-edit-panel {
+  background-color: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html.light .agenda-edit-panel .text-white {
+  color: #0f172a;
 }
 
 html.light .text-emerald-400 {
