@@ -856,7 +856,7 @@ export default function LogWorkoutPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-md px-4">
+      <div className="log-workout-fab fixed inset-x-0 z-10 mx-auto max-w-md px-4">
         <div className="flex items-center gap-2">
           <button
             type="button"

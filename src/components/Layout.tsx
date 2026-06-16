@@ -58,28 +58,30 @@ export default function Layout() {
       </main>
 
       {/* Aura-stijl: vlakke bottom bar, actieve tab als pill */}
-      <nav className="app-nav fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md border-t backdrop-blur-md">
-        <div className="flex items-center justify-around px-2 py-2">
-          {tabs.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] font-semibold uppercase tracking-wide transition ${isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon active={isActive} />
-                  <span className="mt-0.5">{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+      <div className="app-nav-shell">
+        <nav className="app-nav mx-auto max-w-md">
+          <div className="app-nav-tabs flex items-center justify-around px-2">
+            {tabs.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                className={({ isActive }) =>
+                  `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold uppercase tracking-wide transition ${isActive ? 'nav-pill-active' : 'text-slate-500 hover:text-slate-300'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon active={isActive} />
+                    <span className="mt-0.5">{label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      </div>
     </div>
   )
 }
