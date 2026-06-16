@@ -43,7 +43,7 @@ body {
 :root {
   --top-bar-height: 56px;
   --top-bar-offset: calc(var(--top-bar-height) + env(safe-area-inset-top, 0px));
-  --bottom-nav-height: 80px;
+  --bottom-nav-height: 64px;
   --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
@@ -446,6 +446,14 @@ input[type="number"] {
     @apply flex flex-col justify-center;
   }
 
+  .app-page-settings {
+    flex: none;
+  }
+
+  .app-page-settings > .card {
+    flex: none;
+  }
+
   .log-workout-fab {
     bottom: var(--bottom-nav-offset);
   }
@@ -513,11 +521,11 @@ input[type="number"] {
     right: 0;
     bottom: 0;
     z-index: 10000;
-    height: var(--bottom-nav-height);
+    box-sizing: border-box;
+    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #050b16;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    box-sizing: content-box;
   }
 
   .bottom-nav-inner {

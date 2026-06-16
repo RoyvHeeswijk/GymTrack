@@ -75,7 +75,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="app-page">
+    <div className="app-page app-page-settings">
       <PageHeader section="App" title="Instellingen" compact />
 
       <div className="card space-y-4">
