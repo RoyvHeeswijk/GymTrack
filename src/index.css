@@ -469,6 +469,15 @@ input[type="number"] {
     min-height: auto;
   }
 
+  .app-page-account {
+    flex: none;
+  }
+
+  .app-page-account > .card {
+    flex: none;
+    min-height: auto;
+  }
+
   .log-workout-fab {
     bottom: var(--bottom-nav-offset);
   }

@@ -55,7 +55,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="app-page">
+    <div className="app-page app-page-account">
       <PageHeader section="Account" title="Mijn account" compact />
 
       <div className="card flex items-center gap-4">
