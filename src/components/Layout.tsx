@@ -18,12 +18,9 @@ export default function Layout() {
 
   return (
     <>
-      <div className="app-layout">
-        <main className={mainClass}>
-          <Outlet />
-        </main>
-      </div>
-
+      <main className={mainClass}>
+        <Outlet />
+      </main>
       <TopBar />
       <BottomNav />
     </>

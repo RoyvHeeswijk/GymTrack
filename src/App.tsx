@@ -59,7 +59,7 @@ function ConfigNotice() {
 export default function App() {
   if (!isSupabaseConfigured) {
     return (
-      <div className="app-bg app mx-auto max-w-md shadow-2xl ring-1 ring-theme">
+      <div className="app-bg app mx-auto flex h-full min-h-0 w-full max-w-md flex-col overflow-hidden shadow-2xl ring-1 ring-theme">
         <ConfigNotice />
       </div>
     )
@@ -69,7 +69,7 @@ export default function App() {
     <AuthProvider>
       <SettingsProvider>
         <BrowserRouter>
-          <div className="app-bg app mx-auto max-w-md shadow-2xl ring-1 ring-theme">
+          <div className="app-bg app mx-auto flex h-full min-h-0 w-full max-w-md flex-col overflow-hidden shadow-2xl ring-1 ring-theme">
             <AppRoutes />
           </div>
         </BrowserRouter>
