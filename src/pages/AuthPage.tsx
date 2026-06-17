@@ -40,7 +40,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="app-scroll flex h-full min-h-0 flex-1 flex-col justify-center px-6 py-12">
+    <div className="app-scroll flex h-full min-h-0 flex-1 flex-col justify-center px-6">
       <div className="mb-10 text-center">
         <h1 className="app-logo text-3xl font-bold tracking-[0.12em]">
           GYM<span className="gradient-text">TRACK</span>
