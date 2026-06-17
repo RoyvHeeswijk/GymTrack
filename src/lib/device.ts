@@ -19,9 +19,9 @@ export function getBottomNavAnchor(): HTMLElement {
   return document.getElementById('bottom-nav-anchor') ?? document.body
 }
 
-/** iOS: sync viewport height for #root only (not nav positioning). */
+/** Lock document height to the visible viewport (iOS Safari/PWA). */
 export function syncViewportHeight(): void {
-  const height = window.innerHeight
+  const height = window.visualViewport?.height ?? window.innerHeight
   document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
 }
 
@@ -35,6 +35,7 @@ export function initViewportSync(): void {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') update()
   })
+  window.visualViewport?.addEventListener('resize', update)
 }
 
 /** Zet platform-classes op html voor iOS/PWA-specifieke CSS (safe-area). */

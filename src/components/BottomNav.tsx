@@ -1,6 +1,5 @@
 import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
-import { getBottomNavAnchor } from '../lib/device'
 
 const tabs = [
   { to: '/', label: 'Home', icon: HomeIcon },
@@ -34,7 +33,7 @@ export default function BottomNav() {
         ))}
       </div>
     </nav>,
-    getBottomNavAnchor(),
+    document.body,
   )
 }
 
