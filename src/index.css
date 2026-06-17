@@ -43,7 +43,7 @@ body {
   --top-bar-height: 56px;
   --top-bar-offset: calc(var(--top-bar-height) + env(safe-area-inset-top, 0px));
   --bottom-nav-height: 80px;
-  --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-offset: var(--bottom-nav-height);
 }
 
 #root {
@@ -543,6 +543,7 @@ input[type="number"] {
     z-index: 10000;
     margin: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: content-box;
     background: #050b16;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
