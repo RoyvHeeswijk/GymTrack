@@ -1,7 +1,6 @@
-import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
-import { getBottomNavAnchor, pinBottomNav } from '../lib/device'
+import { getBottomNavAnchor } from '../lib/device'
 
 const tabs = [
   { to: '/', label: 'Home', icon: HomeIcon },
@@ -12,21 +11,6 @@ const tabs = [
 ]
 
 export default function BottomNav() {
-  useEffect(() => {
-    pinBottomNav()
-
-    const onResume = () => pinBottomNav()
-    window.addEventListener('pageshow', onResume)
-    document.addEventListener('visibilitychange', onResume)
-    window.visualViewport?.addEventListener('resize', onResume)
-
-    return () => {
-      window.removeEventListener('pageshow', onResume)
-      document.removeEventListener('visibilitychange', onResume)
-      window.visualViewport?.removeEventListener('resize', onResume)
-    }
-  }, [])
-
   return createPortal(
     <nav className="bottom-nav" aria-label="Hoofdnavigatie">
       <div className="bottom-nav-inner mx-auto flex max-w-md items-center justify-around px-2">

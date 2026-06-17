@@ -19,27 +19,14 @@ export function getBottomNavAnchor(): HTMLElement {
   return document.getElementById('bottom-nav-anchor') ?? document.body
 }
 
-/** iOS PWA: sync real viewport height (dvh is unreliable after resume). */
+/** iOS: sync viewport height for #root only (not nav positioning). */
 export function syncViewportHeight(): void {
-  const height = window.visualViewport?.height ?? window.innerHeight
+  const height = window.innerHeight
   document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
 }
 
-export function pinBottomNav(): void {
-  document.querySelectorAll<HTMLElement>('.bottom-nav').forEach((el) => {
-    el.style.position = 'fixed'
-    el.style.left = '0'
-    el.style.right = '0'
-    el.style.bottom = '0'
-    el.style.zIndex = '10000'
-  })
-}
-
 export function initViewportSync(): void {
-  const update = () => {
-    syncViewportHeight()
-    pinBottomNav()
-  }
+  const update = () => syncViewportHeight()
 
   update()
   window.addEventListener('resize', update)
@@ -48,8 +35,6 @@ export function initViewportSync(): void {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') update()
   })
-  window.visualViewport?.addEventListener('resize', update)
-  window.visualViewport?.addEventListener('scroll', update)
 }
 
 /** Zet platform-classes op html voor iOS/PWA-specifieke CSS (safe-area). */

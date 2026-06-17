@@ -264,41 +264,47 @@ export default function ManualSchemaBuilder({ onComplete }: ManualSchemaBuilderP
 
             <div className="space-y-2">
               {day.exercises.map((exercise, exIndex) => (
-                <div key={exercise.id} className="grid grid-cols-[1fr_3.5rem_4.5rem_auto] items-center gap-2">
+                <div key={exercise.id} className="rounded-lg border border-white/10 bg-[#0e1218]/60 p-2.5">
                   <input
                     type="text"
                     list="manual-exercise-suggestions"
                     value={exercise.name}
                     onChange={(e) => updateExercise(day.id, exercise.id, { name: e.target.value })}
                     placeholder={exIndex === 0 ? 'Oefening' : 'Nog een oefening'}
-                    className="min-w-0 rounded-lg border border-white/10 bg-[#0e1218] px-2.5 py-2 text-sm text-white outline-none focus:border-emerald-400/50"
+                    className="w-full min-w-0 rounded-lg border border-white/10 bg-[#0e1218] px-2.5 py-2 text-sm text-white outline-none focus:border-emerald-400/50"
                   />
-                  <input
-                    type="number"
-                    min={1}
-                    value={exercise.sets}
-                    onChange={(e) => updateExercise(day.id, exercise.id, { sets: e.target.value })}
-                    className="rounded-lg border border-white/10 bg-[#0e1218] px-1 py-2 text-center text-sm text-white outline-none focus:border-emerald-400/50"
-                    aria-label="Sets"
-                    title="Sets"
-                  />
-                  <input
-                    type="text"
-                    value={exercise.reps}
-                    onChange={(e) => updateExercise(day.id, exercise.id, { reps: e.target.value })}
-                    placeholder="8-12"
-                    className="rounded-lg border border-white/10 bg-[#0e1218] px-1 py-2 text-center text-sm text-white outline-none focus:border-emerald-400/50"
-                    aria-label="Reps"
-                    title="Reps"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeExercise(day.id, exercise.id)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:text-red-400"
-                    aria-label="Oefening verwijderen"
-                  >
-                    ×
-                  </button>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                      <span className="shrink-0 text-[10px] font-medium text-slate-500">Sets</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={exercise.sets}
+                        onChange={(e) => updateExercise(day.id, exercise.id, { sets: e.target.value })}
+                        className="w-full min-w-0 rounded-lg border border-white/10 bg-[#0e1218] px-2 py-2 text-center text-sm text-white outline-none focus:border-emerald-400/50"
+                        aria-label="Sets"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                      <span className="shrink-0 text-[10px] font-medium text-slate-500">Reps</span>
+                      <input
+                        type="text"
+                        value={exercise.reps}
+                        onChange={(e) => updateExercise(day.id, exercise.id, { reps: e.target.value })}
+                        placeholder="8-12"
+                        className="w-full min-w-0 rounded-lg border border-white/10 bg-[#0e1218] px-2 py-2 text-center text-sm text-white outline-none focus:border-emerald-400/50"
+                        aria-label="Reps"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExercise(day.id, exercise.id)}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:text-red-400"
+                      aria-label="Oefening verwijderen"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

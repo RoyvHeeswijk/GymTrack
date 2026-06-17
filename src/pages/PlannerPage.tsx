@@ -7,7 +7,7 @@ export default function PlannerPage() {
   const { reload } = useSchedule()
 
   return (
-    <div className="app-page">
+    <div className="app-page app-page-planner">
       <PageHeader
         section="Schema"
         title="Trainingsschema"
