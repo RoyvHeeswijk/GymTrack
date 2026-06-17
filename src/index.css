@@ -541,18 +541,14 @@ input[type="number"] {
     right: 0;
     bottom: 0;
     z-index: 10000;
-    box-sizing: border-box;
-    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     margin: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #050b16;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .bottom-nav-inner {
-    box-sizing: border-box;
     height: var(--bottom-nav-height);
-    min-height: var(--bottom-nav-height);
   }
 
   .app-logo {
@@ -597,12 +593,15 @@ html.light body {
   color: #0f172a;
 }
 
-/* iOS PWA: body/nav-shell achtergrond vult home-indicator zone */
+/* iOS: body/nav achtergrond vult home-indicator zone (Safari + PWA) */
+html.ios,
+html.ios body,
 html.ios-standalone,
 html.ios-standalone body {
   background-color: #050b16;
 }
 
+html.ios .bottom-nav,
 html.ios-standalone .bottom-nav {
   background-color: #050b16;
 }
