@@ -223,3 +223,14 @@ export function resolveLoggingPlanDay(
   if (agenda.next) return agenda.next.planDay
   return null
 }
+
+/** Index in schedule.days voor de training die bij Loggen geladen wordt. */
+export function resolveLoggingPlanDayIndex(
+  schedule: Schedule,
+  workouts: WorkoutWithSets[],
+): number | null {
+  const agenda = computeAgenda(schedule, workouts)
+  if (agenda.today) return agenda.today.planDayIndex
+  if (agenda.next) return agenda.next.planDayIndex
+  return null
+}

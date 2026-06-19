@@ -40,12 +40,12 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="app-scroll flex h-full min-h-0 flex-1 flex-col justify-center px-6">
-      <div className="mb-10 text-center">
-        <h1 className="app-logo text-3xl font-bold tracking-[0.12em]">
+    <div className="auth-page flex flex-col justify-center px-6 py-12">
+      <div className="mb-8 text-center">
+        <h1 className="app-logo text-2xl font-bold tracking-[0.12em]">
           GYM<span className="gradient-text">TRACK</span>
         </h1>
-        <p className="mt-3 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-400">
           Plan slim. Train visueel. Begrijp je progressie.
         </p>
       </div>

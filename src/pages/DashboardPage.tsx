@@ -2,15 +2,21 @@ import { useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSchedule } from '../hooks/useSchedule'
-import {
-  computeDashboardStats,
-  computePersonalRecords,
-  computeWeeklyStreak,
-  formatDateNl,
-} from '../lib/stats'
+import { computeDashboardStats, computeWeeklyStreak, formatDateNl } from '../lib/stats'
 import { computeAgenda } from '../lib/scheduling'
 import { useProfile } from '../hooks/useProfile'
-import type { PlanDay } from '../lib/planner'
+import {
+  computeBiggestImprovement,
+  computeCoachInsights,
+  computeRecentPRs,
+  computeTrainingRecommendation,
+  computeWeeklyActivity,
+  computeWeeklyVolumeKg,
+  formatGoalLabel,
+  getDailyTip,
+  getMotivationTip,
+  weekdayLabel,
+} from '../lib/dashboardInsights'
 
 export default function DashboardPage() {
   const { workouts, loading, error } = useWorkouts()
@@ -34,180 +40,221 @@ export default function DashboardPage() {
 
   const stats = computeDashboardStats(workouts)
   const streak = computeWeeklyStreak(workouts)
-  const recent = workouts.slice(0, 2)
-  const topPr = computePersonalRecords(workouts)[0] ?? null
+  const weeklyVolume = computeWeeklyVolumeKg(workouts)
+  const recentPrs = computeRecentPRs(workouts, 5)
+  const latestPr = recentPrs[0] ?? null
+  const biggestGain = computeBiggestImprovement(recentPrs)
+  const coachInsights = computeCoachInsights(workouts)
+  const weekBars = computeWeeklyActivity(workouts)
+  const maxBar = Math.max(1, ...weekBars.map((b) => b.count))
+  const goalLabel = formatGoalLabel(schedule?.goal)
+  const motivation = getMotivationTip()
+  const dailyTip = getDailyTip()
+  const trainingTip = computeTrainingRecommendation(agenda, schedule?.goal ?? null)
 
-  const focusDay: PlanDay | null = agenda?.today?.planDay ?? agenda?.next?.planDay ?? null
+  const focusDay = agenda?.today?.planDay ?? agenda?.next?.planDay ?? null
   const focusIsToday = Boolean(agenda?.today)
+  const focusWeekday = agenda?.today
+    ? agenda.days.find((d) => d.isToday)?.weekday
+    : agenda?.next?.weekday
+
+  const weekPct =
+    agenda && agenda.adherence.planned
+      ? Math.round((agenda.adherence.done / agenda.adherence.planned) * 100)
+      : 0
 
   function startLog() {
     navigate('/loggen')
   }
 
   return (
-    <div className="dashboard-home">
+    <div className="dashboard-home space-y-4 pb-2">
       {justSaved && (
-        <div className="dashboard-toast status-pill shrink-0 justify-center border-emerald-400/40 py-1.5">
+        <div className="dashboard-toast status-pill justify-center border-emerald-400/40 py-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          Opgeslagen
+          Training opgeslagen
         </div>
       )}
 
-      <div className="dashboard-top shrink-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="section-title">Home</p>
-            <h1 className="truncate text-xl font-bold tracking-tight text-white">Hallo, {name}</h1>
-          </div>
-          {streak > 0 && <span className="dashboard-streak shrink-0">🔥 {streak}w</span>}
+      {/* Welkomstsectie */}
+      <section className="card p-4">
+        <p className="section-title">Welkom terug</p>
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-white">Hallo, {name}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+            Doel: {goalLabel}
+          </span>
+          {streak > 0 && <span className="dashboard-streak">🔥 {streak}w streak</span>}
         </div>
-      </div>
+      </section>
 
-      <div className="dashboard-hero shrink-0">
+      {/* Vandaag */}
+      <section className="card p-4">
+        <p className="section-title">{focusIsToday ? 'Vandaag' : 'Eerstvolgende training'}</p>
         {focusDay ? (
-          <div className="card p-3.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="section-title">{focusIsToday ? 'Vandaag' : 'Volgende sessie'}</p>
-                <h2 className="truncate text-lg font-bold text-white">{focusDay.title}</h2>
-                <p className="truncate text-xs text-slate-400">{focusDay.focus}</p>
-              </div>
-              <div className="surface-inset shrink-0 px-2.5 py-1.5 text-center">
-                <p className="text-base font-bold tabular-nums text-white">{focusDay.exercises.length}</p>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">oef.</p>
-              </div>
-            </div>
-
-            {agenda && (
-              <div className="mt-3">
-                <div className="flex items-end gap-1">
-                  {agenda.days.map((d) => (
-                    <div key={d.weekday} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-                      <div
-                        title={d.label}
-                        className={`h-1.5 w-full rounded-full ${
-                          d.done
-                            ? 'bg-emerald-400'
-                            : d.planDay
-                              ? d.isToday
-                                ? 'bg-cyan-400'
-                                : 'bg-white/20'
-                              : 'bg-white/[0.06]'
-                        }`}
-                      />
-                      <span
-                        className={`text-[9px] font-semibold uppercase ${
-                          d.isToday ? 'text-cyan-400' : d.done ? 'text-emerald-400/80' : 'text-slate-500'
-                        }`}
-                      >
-                        {d.shortLabel}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button type="button" onClick={() => startLog()} className="btn-primary mt-3 w-full py-3 text-sm">
+          <>
+            <h2 className="mt-1 text-lg font-bold text-white">{focusDay.title}</h2>
+            <p className="mt-0.5 text-sm text-slate-400">{focusDay.focus}</p>
+            <p className="mt-2 text-xs text-slate-500">
+              {focusIsToday ? 'Vandaag' : weekdayLabel(focusWeekday ?? null)} · {focusDay.exercises.length} oefeningen
+            </p>
+            <button type="button" onClick={() => startLog()} className="btn-primary mt-4 w-full py-3 text-sm">
               Start training →
             </button>
-          </div>
+          </>
         ) : !schedule ? (
-          <div className="card p-3.5">
-            <p className="section-title">Start hier</p>
-            <h2 className="mt-0.5 text-lg font-bold text-white">Maak je schema</h2>
-            <p className="mt-1 text-xs text-slate-400">AI of zelf invullen — daarna staat het in je agenda.</p>
-            <button type="button" onClick={() => navigate('/planner')} className="btn-primary mt-3 w-full py-3 text-sm">
+          <>
+            <h2 className="mt-1 text-lg font-bold text-white">Nog geen schema</h2>
+            <p className="mt-1 text-sm text-slate-400">Maak een schema en activeer het om trainingen te plannen.</p>
+            <button type="button" onClick={() => navigate('/planner')} className="btn-primary mt-4 w-full py-3 text-sm">
               Schema maken →
             </button>
-          </div>
+          </>
         ) : (
-          <div className="card p-3.5 text-center">
-            <p className="text-sm text-slate-400">Geen sessie gepland.</p>
-            <Link to="/agenda" className="btn-secondary mt-2 inline-block px-5 py-2 text-xs">
-              Agenda
+          <>
+            <p className="mt-1 text-sm text-slate-400">Geen sessie gepland in je agenda.</p>
+            <Link to="/agenda" className="btn-secondary mt-3 inline-block px-5 py-2 text-xs">
+              Bekijk agenda
             </Link>
-          </div>
+          </>
         )}
-      </div>
+      </section>
 
-      <div className="dashboard-stats shrink-0">
-        <div className="grid grid-cols-2 gap-1.5">
-          <StatPill label="Deze week" value={String(stats.workoutsThisWeek)} unit="trainingen" />
-          <StatPill label="Totaal" value={String(stats.totalWorkouts)} unit="sessies" />
-          <StatPill label="Sets" value={String(stats.totalSets)} unit="gelogd" />
-          <StatPill
-            label="Volume"
-            value={Math.round(stats.totalVolumeKg).toLocaleString('nl-NL')}
-            unit="kg"
+      {/* Persoonlijke statistieken */}
+      <section>
+        <p className="section-title mb-2">Jouw statistieken</p>
+        <div className="grid grid-cols-2 gap-2">
+          <StatCard label="Deze week" value={String(stats.workoutsThisWeek)} sub="trainingen" />
+          <StatCard label="Streak" value={String(streak)} sub="weken" />
+          <StatCard label="Totaal" value={String(stats.totalWorkouts)} sub="afgerond" />
+          <StatCard
+            label="Volume deze week"
+            value={Math.round(weeklyVolume).toLocaleString('nl-NL')}
+            sub="kg"
           />
         </div>
-      </div>
+      </section>
 
-      {topPr && (
-        <Link to="/progressie" className="card block shrink-0 p-3 transition hover:border-emerald-400/20">
-          <p className="section-title">Sterkste lift</p>
-          <p className="mt-1 truncate text-sm font-semibold text-white">{topPr.exerciseName}</p>
-          <p className="mt-0.5 text-xs font-bold tabular-nums text-emerald-400">
-            {topPr.bestWeightKg} kg × {topPr.reps}
-          </p>
-        </Link>
-      )}
-
-      <section className="dashboard-recent shrink-0">
-        <div className="mb-1.5 flex items-center justify-between">
-          <p className="section-title">Recente activiteit</p>
-          <Link to="/geschiedenis" className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-            Alles →
-          </Link>
-        </div>
-
-        {recent.length === 0 ? (
-          <div className="card flex flex-col items-center p-4 text-center">
-            <p className="text-sm font-medium text-white">Nog geen trainingen</p>
-            <p className="mt-0.5 text-xs text-slate-500">Log je eerste sessie via Loggen.</p>
-            <Link to="/loggen" className="btn-primary mt-3 px-5 py-2 text-xs">
-              Loggen →
+      {/* PR's */}
+      {recentPrs.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="section-title">Persoonlijke records</p>
+            <Link to="/progressie" className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+              Alles →
             </Link>
           </div>
-        ) : (
-          <div className="space-y-1.5">
-            {recent.map((workout) => {
-              const volume = workout.sets.reduce((sum, s) => sum + s.weight_kg * s.reps, 0)
-              const exercises = new Set(workout.sets.map((s) => s.exercise_name)).size
-              return (
-                <div key={workout.id} className="card-tight flex items-center gap-2.5 px-3 py-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-500/10 text-emerald-400">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="m6.5 6.5 11 11" />
-                      <path d="M21 21l-1-1M3 3l1 1" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{workout.name}</p>
-                    <p className="text-[10px] text-slate-500">
-                      {formatDateNl(workout.performed_at)} · {workout.sets.length} sets · {exercises} oef.
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-xs font-bold tabular-nums text-emerald-400">
-                    {Math.round(volume).toLocaleString('nl-NL')} kg
-                  </p>
+
+          {latestPr && (
+            <div className="card mb-2 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Laatste PR</p>
+              <p className="mt-1 font-semibold text-white">{latestPr.exerciseName}</p>
+              <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-400">
+                {latestPr.bestWeightKg} kg × {latestPr.reps}
+              </p>
+              <p className="mt-1 text-[10px] text-slate-500">{formatDateNl(latestPr.achievedAt)}</p>
+            </div>
+          )}
+
+          {biggestGain && biggestGain.improvementKg > 0 && (
+            <div className="card border-emerald-400/20 bg-emerald-500/[0.06] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Grootste verbetering</p>
+              <p className="mt-1 text-sm text-white">
+                {biggestGain.exerciseName}: +{biggestGain.improvementKg} kg
+              </p>
+            </div>
+          )}
+
+          {recentPrs.length > 1 && (
+            <div className="mt-2 space-y-1.5">
+              {recentPrs.slice(1, 4).map((pr) => (
+                <div key={`${pr.exerciseName}-${pr.achievedAt}`} className="card-tight flex items-center justify-between px-3 py-2">
+                  <span className="truncate text-sm text-white">{pr.exerciseName}</span>
+                  <span className="shrink-0 text-xs font-bold tabular-nums text-emerald-400">
+                    {pr.bestWeightKg} kg
+                  </span>
                 </div>
-              )
-            })}
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* AI Coach */}
+      <section className="card p-4">
+        <p className="section-title">AI Coach</p>
+        <ul className="mt-3 space-y-2">
+          {coachInsights.map((line) => (
+            <li key={line} className="flex gap-2 text-sm leading-snug text-slate-300">
+              <span className="shrink-0 text-emerald-400">✦</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Voortgang */}
+      <section className="card p-4">
+        <p className="section-title">Voortgang</p>
+        <div className="mt-3 flex items-end justify-between gap-2">
+          {weekBars.map((bar) => (
+            <div key={bar.label} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <div className="flex h-16 w-full items-end">
+                <div
+                  className={`w-full rounded-t-md transition-all ${
+                    bar.isCurrent ? 'bg-cyan-400' : 'bg-white/15'
+                  }`}
+                  style={{ height: `${Math.max(8, (bar.count / maxBar) * 100)}%` }}
+                />
+              </div>
+              <span className={`text-[9px] font-semibold ${bar.isCurrent ? 'text-cyan-400' : 'text-slate-500'}`}>
+                {bar.label}
+              </span>
+              <span className="text-[10px] tabular-nums text-slate-400">{bar.count}</span>
+            </div>
+          ))}
+        </div>
+        {agenda && agenda.adherence.planned > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Weekconsistentie</span>
+              <span className="tabular-nums text-white">
+                {agenda.adherence.done}/{agenda.adherence.planned} ({weekPct}%)
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
+                style={{ width: `${weekPct}%` }}
+              />
+            </div>
           </div>
         )}
+      </section>
+
+      {/* Motivatie */}
+      <section className="card space-y-3 p-4">
+        <p className="section-title">Motivatie</p>
+        <p className="text-sm leading-relaxed text-slate-300">{motivation}</p>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tip van vandaag</p>
+          <p className="mt-1 text-sm text-slate-300">{dailyTip}</p>
+        </div>
+        <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/[0.06] px-3 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Voor je training</p>
+          <p className="mt-1 text-sm text-slate-200">{trainingTip}</p>
+        </div>
       </section>
     </div>
   )
 }
 
-function StatPill({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="card px-2.5 py-2">
+    <div className="card px-3 py-2.5">
       <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="text-base font-bold tabular-nums text-white">{value}</p>
-      {unit && <p className="text-[10px] text-slate-500">{unit}</p>}
+      <p className="text-lg font-bold tabular-nums text-white">{value}</p>
+      <p className="text-[10px] text-slate-500">{sub}</p>
     </div>
   )
 }

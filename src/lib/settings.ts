@@ -1,6 +1,9 @@
+import { USER_ALTERNATIVES_KEY } from './userAlternatives'
+
 export interface AppSettings {
   showCoachTips: boolean
   showMuscleFocus: boolean
+  showMuscle3D: boolean
   lightMode: boolean
 }
 
@@ -9,6 +12,7 @@ const STORAGE_KEY = 'gymtrack-settings'
 const DEFAULTS: AppSettings = {
   showCoachTips: true,
   showMuscleFocus: true,
+  showMuscle3D: true,
   lightMode: false,
 }
 
@@ -31,4 +35,5 @@ export const LOG_SESSION_KEY = 'gymtrack-log-session'
 /** Wis lokale log-sessie (o.a. na prototype-reset). */
 export function clearPrototypeLocalState(): void {
   sessionStorage.removeItem(LOG_SESSION_KEY)
+  localStorage.removeItem(USER_ALTERNATIVES_KEY)
 }

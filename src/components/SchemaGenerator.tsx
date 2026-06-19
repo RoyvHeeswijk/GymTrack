@@ -603,12 +603,59 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
 
           {error && <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
 
-          <button onClick={() => void handleActivate()} disabled={activateState === 'busy'} className="btn-primary w-full">
-            {activateState === 'busy' ? 'Activeren…' : 'Activeer als mijn agenda'}
+          <div className="card space-y-3 p-4">
+            <p className="section-title">Hoe werkt het?</p>
+            <ol className="space-y-2 text-sm">
+              <li className="flex gap-2 text-emerald-400">
+                <span className="font-bold">1.</span>
+                <span>Schema gegenereerd — controleer oefeningen en weekindeling.</span>
+              </li>
+              <li className={`flex gap-2 ${saveState === 'saved' ? 'text-emerald-400' : 'text-slate-300'}`}>
+                <span className="font-bold">2.</span>
+                <span>
+                  {saveState === 'saved'
+                    ? 'Opgeslagen in je bibliotheek ✓'
+                    : 'Sla het schema op om het later terug te vinden.'}
+                </span>
+              </li>
+              <li className="flex gap-2 text-slate-300">
+                <span className="font-bold">3.</span>
+                <span>Activeer als weekagenda — daarna verschijnt het in Home en Agenda.</span>
+              </li>
+              <li className="flex gap-2 text-slate-500">
+                <span className="font-bold">4.</span>
+                <span>Start je training via Home of Loggen.</span>
+              </li>
+            </ol>
+          </div>
+
+          {saveState === 'saved' && (
+            <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+              Schema opgeslagen. Activeer het om trainingen te kunnen starten.
+            </p>
+          )}
+
+          <button
+            onClick={() => void handleSave()}
+            disabled={saveState === 'saving'}
+            className="btn-secondary w-full"
+          >
+            {saveState === 'saving' ? 'Opslaan…' : saveState === 'saved' ? 'Opgeslagen ✓' : 'Stap 2: Schema opslaan'}
           </button>
-          <button onClick={() => void handleSave()} disabled={saveState !== 'idle'} className="btn-secondary w-full">
-            {saveState === 'saving' ? 'Opslaan…' : saveState === 'saved' ? 'Opgeslagen ✓' : 'Alleen opslaan'}
+          <p className="text-center text-[11px] text-slate-500">
+            Opslaan bewaart je schema — je kunt het later opnieuw activeren.
+          </p>
+
+          <button
+            onClick={() => void handleActivate()}
+            disabled={activateState === 'busy'}
+            className="btn-primary w-full"
+          >
+            {activateState === 'busy' ? 'Activeren…' : 'Stap 3: Activeer als mijn agenda'}
           </button>
+          <p className="text-center text-[11px] text-slate-500">
+            Na activeren kun je direct trainen via Home of Loggen.
+          </p>
         </>
       )}
 

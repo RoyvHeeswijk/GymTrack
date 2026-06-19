@@ -21,6 +21,10 @@ export function getBottomNavAnchor(): HTMLElement {
 
 /** Lock document height to the visible viewport (iOS Safari/PWA). */
 export function syncViewportHeight(): void {
+  if (!isIOS()) {
+    document.documentElement.style.removeProperty('--app-height')
+    return
+  }
   const height = window.visualViewport?.height ?? window.innerHeight
   document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
 }

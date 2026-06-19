@@ -87,6 +87,14 @@ export default function SettingsPage() {
         />
         <div className="border-t border-theme pt-4">
           <SettingToggle
+            label="3D-spierweergave bij loggen"
+            description="Toon het 3D-lichaam met spieractivatie tijdens het loggen van een oefening."
+            checked={settings.showMuscle3D}
+            onChange={() => updateSettings({ showMuscle3D: !settings.showMuscle3D })}
+          />
+        </div>
+        <div className="border-t border-theme pt-4">
+          <SettingToggle
             label="Spierfocus bij oefening"
             description="Toon een klein vakje met de belangrijkste spiergroepen per oefening tijdens het loggen."
             checked={settings.showMuscleFocus}

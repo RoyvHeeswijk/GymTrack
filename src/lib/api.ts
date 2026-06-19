@@ -347,6 +347,12 @@ export async function updateScheduleAssignments(
   if (error) throw error
 }
 
+/** Vervangt de trainingsdagen van een actief schema (bijv. oefening permanent wisselen). */
+export async function updateScheduleDays(scheduleId: string, days: PlanDay[]): Promise<void> {
+  const { error } = await supabase.from('schedules').update({ days }).eq('id', scheduleId)
+  if (error) throw error
+}
+
 export async function deleteSchedule(scheduleId: string): Promise<void> {
   const { error } = await supabase.from('schedules').delete().eq('id', scheduleId)
   if (error) throw error

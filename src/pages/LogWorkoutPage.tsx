@@ -7,10 +7,16 @@ import {
   fetchExercises,
   fetchTodaysWorkout,
   syncWorkoutSets,
+  updateScheduleDays,
 } from '../lib/api'
-import { EXERCISE_DB, getAlternatives, recognizeExercise } from '../lib/exerciseDb'
-import { resolveLoggingPlanDay } from '../lib/scheduling'
+import { EXERCISE_DB, recognizeExercise } from '../lib/exerciseDb'
+import { resolveLoggingPlanDay, resolveLoggingPlanDayIndex } from '../lib/scheduling'
 import { LOG_SESSION_KEY } from '../lib/settings'
+import {
+  addUserAlternative,
+  getAlternativeItems,
+  resolveAlternativeName,
+} from '../lib/userAlternatives'
 import { useSchedule } from '../hooks/useSchedule'
 import { useSettings } from '../hooks/useSettings'
 import { useWorkouts } from '../hooks/useWorkouts'
@@ -246,34 +252,12 @@ function prefillFromHistory(blocks: ExerciseBlock[], workouts: WorkoutWithSets[]
   }))
 }
 
-function LogNavArrowIcon({ direction }: { direction: 'left' | 'right' }) {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      {direction === 'left' ? (
-        <path d="M15 18l-6-6 6-6" />
-      ) : (
-        <path d="M9 18l6-6-6-6" />
-      )}
-    </svg>
-  )
-}
-
 const AUTOSAVE_MS = 3000
 
 export default function LogWorkoutPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { schedule, loading: scheduleLoading, reload: reloadSchedule } = useSchedule()
+  const { schedule, setSchedule, loading: scheduleLoading, reload: reloadSchedule } = useSchedule()
   const { workouts, loading: workoutsLoading, reload: reloadWorkouts } = useWorkouts()
   const { settings } = useSettings()
 
@@ -284,12 +268,14 @@ export default function LogWorkoutPage() {
   const [ready, setReady] = useState(false)
   const [knownExercises, setKnownExercises] = useState<string[]>([])
   const [showAlternatives, setShowAlternatives] = useState(false)
-  const [show3D, setShow3D] = useState(false)
-  const [showCoach, setShowCoach] = useState(false)
   const [showNote, setShowNote] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showReorder, setShowReorder] = useState(false)
   const [sessionPlanDay, setSessionPlanDay] = useState<PlanDay | null>(null)
+  const [sessionPlanDayIndex, setSessionPlanDayIndex] = useState<number | null>(null)
+  const [customAltInput, setCustomAltInput] = useState('')
+  const [userAltVersion, setUserAltVersion] = useState(0)
+  const [schemaSaving, setSchemaSaving] = useState(false)
   const [noPlanAvailable, setNoPlanAvailable] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -308,7 +294,11 @@ export default function LogWorkoutPage() {
   const block = blocks[currentIndex] ?? blocks[0]
   const isLastExercise = blocks.length > 0 && currentIndex >= blocks.length - 1
   const recognized = block?.name.trim() ? recognizeExercise(block.name) : null
-  const alternatives = recognized ? getAlternatives(recognized.name) : []
+  const alternativeItems = useMemo(() => {
+    if (!block?.name.trim()) return []
+    return getAlternativeItems(block.name)
+  }, [block?.name, userAltVersion])
+  const canShowAlternatives = Boolean(block?.name.trim())
 
   const validSets = useMemo(() => flattenBlocks(blocks, workouts), [blocks, workouts])
   validSetsRef.current = validSets
@@ -332,18 +322,20 @@ export default function LogWorkoutPage() {
 
   useEffect(() => {
     setShowNote(Boolean(block?.note.trim()))
-    setShowCoach(false)
     setShowAlternatives(false)
+    setCustomAltInput('')
   }, [currentIndex, block?.id, block?.note])
 
   async function initSession(day: PlanDay, mergeFrom?: ExerciseBlock[]) {
     if (!user || !schedule) return
 
+    const history = workoutsRef.current
+
     setWorkoutName(day.title)
     setSessionPlanDay(day)
+    setSessionPlanDayIndex(resolveLoggingPlanDayIndex(schedule, history))
     setNoPlanAvailable(false)
 
-    const history = workoutsRef.current
     let nextBlocks: ExerciseBlock[]
     let id: string
 
@@ -506,6 +498,49 @@ export default function LogWorkoutPage() {
       ),
     )
     setShowAlternatives(false)
+    setCustomAltInput('')
+  }
+
+  function saveCustomAlternative(saveOnly = false) {
+    if (!block) return
+    const resolved = resolveAlternativeName(customAltInput)
+    if (!resolved) return
+    const added = addUserAlternative(block.name, resolved)
+    if (added) setUserAltVersion((v) => v + 1)
+    if (!saveOnly) swapExercise(block.id, resolved)
+    else setCustomAltInput('')
+  }
+
+  async function pinExerciseInSchema(newName: string) {
+    if (!block || !schedule || sessionPlanDayIndex === null) return
+    const resolved = resolveAlternativeName(newName)
+    if (!resolved) return
+
+    setSchemaSaving(true)
+    setError(null)
+    try {
+      const oldKey = canonicalName(block.name)
+      const newDays = schedule.days.map((day, i) => {
+        if (i !== sessionPlanDayIndex) return day
+        return {
+          ...day,
+          exercises: day.exercises.map((ex) =>
+            canonicalName(ex.name) === oldKey ? { ...ex, name: resolved } : ex,
+          ),
+        }
+      })
+      await updateScheduleDays(schedule.id, newDays)
+      const updatedDay = newDays[sessionPlanDayIndex]
+      setSchedule({ ...schedule, days: newDays })
+      setSessionPlanDay(updatedDay)
+      addUserAlternative(block.name, resolved)
+      setUserAltVersion((v) => v + 1)
+      swapExercise(block.id, resolved)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Schema bijwerken mislukt.')
+    } finally {
+      setSchemaSaving(false)
+    }
   }
 
   function goNext() {
@@ -606,30 +641,6 @@ export default function LogWorkoutPage() {
                 >
                   Volgorde aanpassen
                 </button>
-                {recognized && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShow3D((v) => !v)
-                      setShowMenu(false)
-                    }}
-                    className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
-                  >
-                    {show3D ? 'Verberg 3D' : 'Toon 3D'}
-                  </button>
-                )}
-                {executionSteps.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCoach((v) => !v)
-                      setShowMenu(false)
-                    }}
-                    className="block w-full px-4 py-2 text-left text-xs text-slate-300 hover:bg-white/5"
-                  >
-                    {showCoach ? 'Verberg uitvoering' : 'Toon uitvoering'}
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -752,22 +763,32 @@ export default function LogWorkoutPage() {
           </div>
         )}
 
-        {recognized && alternatives.length > 0 && (
+        {canShowAlternatives && (
           <button type="button" onClick={() => setShowAlternatives((v) => !v)} className="log-alt-btn">
             {showAlternatives ? 'Verberg alternatieven' : 'Apparaat bezet? Alternatieven'}
           </button>
         )}
 
-        {showAlternatives && alternatives.length > 0 && (
+        {showAlternatives && canShowAlternatives && (
           <div className="space-y-1.5">
-            {alternatives.map((alt) => (
+            {alternativeItems.length === 0 && (
+              <p className="text-xs text-slate-500">
+                Geen suggesties — typ hieronder je eigen alternatief.
+              </p>
+            )}
+            {alternativeItems.map((alt) => (
               <div
                 key={alt.name}
                 className="flex items-center justify-between rounded-xl border border-[#334155] bg-[#1e293b] px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">{alt.name}</p>
-                  <p className="text-[10px] text-slate-500">{EQUIPMENT_LABELS[alt.equipment]}</p>
+                  <p className="truncate text-sm font-medium text-white">
+                    {alt.name}
+                    {alt.isUserSaved && (
+                      <span className="ml-1.5 text-[10px] font-normal text-teal-400/80">eigen</span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-slate-500">{alt.equipmentLabel}</p>
                 </div>
                 <button
                   type="button"
@@ -778,10 +799,52 @@ export default function LogWorkoutPage() {
                 </button>
               </div>
             ))}
+
+            <div className="rounded-xl border border-dashed border-[#334155] bg-[#0f172a]/60 p-3 space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                Eigen alternatief
+              </p>
+              <input
+                type="text"
+                list="exercise-suggestions"
+                value={customAltInput}
+                onChange={(e) => setCustomAltInput(e.target.value)}
+                placeholder="Typ een oefening (bijv. kabel fly)"
+                className="w-full rounded-lg border border-[#334155] bg-[#1e293b] px-3 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-teal-400/50"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!customAltInput.trim()}
+                  onClick={() => swapExercise(block.id, resolveAlternativeName(customAltInput))}
+                  className="rounded-lg bg-teal-400 px-3 py-1.5 text-[11px] font-bold text-slate-950 hover:bg-teal-300 disabled:opacity-40"
+                >
+                  Wissel nu
+                </button>
+                <button
+                  type="button"
+                  disabled={!customAltInput.trim()}
+                  onClick={() => saveCustomAlternative(true)}
+                  className="rounded-lg border border-[#334155] bg-[#1e293b] px-3 py-1.5 text-[11px] font-medium text-slate-300 hover:border-slate-500 disabled:opacity-40"
+                >
+                  Opslaan als alternatief
+                </button>
+                {sessionPlanDayIndex !== null && (
+                  <button
+                    type="button"
+                    disabled={!customAltInput.trim() || schemaSaving}
+                    onClick={() => pinExerciseInSchema(customAltInput)}
+                    className="rounded-lg border border-teal-400/40 bg-teal-400/10 px-3 py-1.5 text-[11px] font-medium text-teal-300 hover:bg-teal-400/20 disabled:opacity-40"
+                  >
+                    {schemaSaving ? 'Schema…' : 'Vast in schema'}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {showCoach && executionSteps.length > 0 && (
+        {settings.showCoachTips && executionSteps.length > 0 && (
           <div className="log-coach-tip">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal-400">Uitvoering</p>
             <ol className="mt-1.5 space-y-1">
@@ -795,7 +858,7 @@ export default function LogWorkoutPage() {
           </div>
         )}
 
-        {show3D && recognized && (
+        {settings.showMuscle3D && recognized && (
           <div className="overflow-hidden rounded-xl border border-[#334155]">
             <Body3D activation={recognized.muscles} height={200} showLegend={false} />
           </div>
@@ -856,30 +919,18 @@ export default function LogWorkoutPage() {
         </div>
       )}
 
-      <div className="log-workout-fab fixed inset-x-0 z-10 mx-auto max-w-md px-4">
+      <div className="log-workout-nav">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={goPrev}
             disabled={currentIndex === 0}
-            className="log-nav-arrow"
-            aria-label="Vorige oefening"
+            className="btn-ghost flex-1 py-2.5 text-xs disabled:opacity-30"
           >
-            <LogNavArrowIcon direction="left" />
+            ← Vorige
           </button>
-          <button type="button" onClick={goNext} className="log-btn-next">
+          <button type="button" onClick={goNext} className="log-btn-next flex-[2]">
             {isLastExercise ? 'Klaar' : 'Volgende'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!isLastExercise) goNext()
-            }}
-            disabled={isLastExercise}
-            className="log-nav-arrow"
-            aria-label="Volgende oefening"
-          >
-            <LogNavArrowIcon direction="right" />
           </button>
         </div>
       </div>

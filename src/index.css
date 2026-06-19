@@ -161,19 +161,13 @@ input[type="number"] {
     @apply rounded-xl bg-emerald-500/15 text-emerald-400;
   }
 
-  /* Workout log — mobiel-first, compact */
+  /* Workout log — scrollbaar, duidelijke hiërarchie */
   .log-page {
-    @apply flex min-h-0 flex-1 flex-col gap-2 overflow-hidden;
+    @apply flex flex-col gap-3 pb-2;
   }
 
   .log-scroll {
-    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .log-scroll::-webkit-scrollbar {
-    display: none;
+    @apply space-y-2;
   }
 
   .log-top {
@@ -285,16 +279,32 @@ input[type="number"] {
   }
 
   .agenda-day-row {
-    @apply rounded-xl border border-white/[0.07] px-3 py-1.5;
+    @apply rounded-xl border border-white/[0.07] px-3 py-3;
     background-color: #12171f;
   }
 
+  .agenda-day-row--today {
+    @apply ring-1 ring-cyan-400/50;
+  }
+
+  .agenda-day-row--done {
+    @apply border-emerald-400/25 bg-emerald-500/[0.06];
+  }
+
+  .agenda-day-row--missed {
+    @apply border-amber-400/25 bg-amber-500/[0.06];
+  }
+
+  .agenda-day-row--planned {
+    @apply border-white/[0.1];
+  }
+
   .agenda-day-badge--compact {
-    @apply h-8 w-8 text-[9px];
+    @apply h-9 w-9 text-[9px];
   }
 
   .agenda-page {
-    @apply h-full gap-1 overflow-hidden;
+    @apply gap-4;
   }
 
   .agenda-page-header .page-title {
@@ -302,19 +312,31 @@ input[type="number"] {
   }
 
   .agenda-week {
-    @apply min-h-0 flex-1;
+    @apply gap-3;
   }
 
   .agenda-month {
-    @apply min-h-0 flex-1;
+    @apply gap-3;
   }
 
   .agenda-month-grid {
-    @apply min-h-0 flex-1;
+    @apply flex flex-col gap-1.5;
   }
 
   .agenda-month-week {
-    @apply min-h-0 flex-1;
+    @apply grid grid-cols-7 gap-1.5;
+  }
+
+  .agenda-month-day {
+    @apply flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1.5 text-center transition;
+  }
+
+  .agenda-month-day-num {
+    @apply text-[11px] font-bold leading-none tabular-nums;
+  }
+
+  .agenda-month-day-label {
+    @apply max-w-full truncate px-0.5 text-[8px] font-semibold leading-tight;
   }
 
   .agenda-edit-backdrop {
@@ -416,40 +438,25 @@ input[type="number"] {
   }
 
   .page-content-home {
-    @apply flex flex-col overflow-x-hidden overflow-y-auto;
     padding-top: calc(var(--top-bar-offset) + 0.5rem);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .page-content-home::-webkit-scrollbar {
-    display: none;
   }
 
   .page-content-log {
-    @apply flex flex-col overflow-hidden px-4;
     padding-top: calc(var(--top-bar-offset) + 0.5rem);
   }
 
   .page-content-agenda {
-    @apply h-full min-h-0 flex-1;
-    overflow: hidden;
-    box-sizing: border-box;
     padding-top: calc(var(--top-bar-offset) + 0.5rem);
-    padding-bottom: var(--bottom-nav-offset);
   }
 
   .app-page {
-    @apply flex min-h-0 flex-1 flex-col space-y-3;
+    @apply flex flex-col space-y-4;
   }
 
   .app-page > .card,
   .app-page > .space-y-3 {
-    @apply min-h-0 flex-1;
-  }
-
-  .app-page > .card:last-child:not(:first-child) {
-    @apply flex flex-col justify-center;
+    flex: none;
+    min-height: auto;
   }
 
   .app-page-settings {
@@ -478,12 +485,13 @@ input[type="number"] {
     min-height: auto;
   }
 
-  .log-workout-fab {
-    bottom: var(--bottom-nav-offset);
+  .log-workout-nav {
+    @apply sticky bottom-0 z-10 -mx-4 border-t border-white/[0.06] bg-[#0a0e14]/95 px-4 py-3 backdrop-blur-md;
+    margin-bottom: calc(var(--bottom-nav-offset) - var(--bottom-nav-height));
   }
 
   .dashboard-home {
-    @apply flex min-h-0 flex-1 flex-col gap-2;
+    @apply flex flex-col;
   }
 
   .dashboard-streak {
@@ -498,17 +506,17 @@ input[type="number"] {
     display: none;
   }
 
-  .app-scroll {
-    @apply h-full min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain;
+  .auth-page {
+    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  html.ios-standalone .app-scroll {
+  html.ios-standalone .auth-page {
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  .app-scroll::-webkit-scrollbar {
+  .auth-page::-webkit-scrollbar {
     display: none;
   }
 

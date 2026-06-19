@@ -47,7 +47,7 @@ export default function AgendaPage() {
   if (!schedule || !agenda) {
     return (
       <div className="app-page agenda-page">
-        <PageHeader section="Agenda" title="Weekplanning" compact />
+        <PageHeader section="Agenda" title="Agenda" compact />
         <div className="card text-center">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-xl">
             🗓️
@@ -99,7 +99,7 @@ export default function AgendaPage() {
       )}
 
       <div className="agenda-page-header shrink-0">
-        <PageHeader section="Agenda" title="Weekplanning" compact />
+        <PageHeader section="Agenda" title="Agenda" compact />
       </div>
 
       <div
@@ -214,7 +214,7 @@ export default function AgendaPage() {
       )}
 
       {view === 'maand' && (
-        <section className="agenda-month card-tight flex min-h-0 flex-1 flex-col px-2 py-2">
+        <section className="agenda-month card-tight flex flex-col gap-2 px-3 py-3">
           <div className="mb-1 flex shrink-0 items-center justify-between">
             <button
               onClick={() => {
@@ -239,24 +239,24 @@ export default function AgendaPage() {
             </button>
           </div>
 
-          <div className="mb-0.5 grid shrink-0 grid-cols-7 gap-0.5">
+          <div className="mb-1 grid shrink-0 grid-cols-7 gap-1.5">
             {WEEKDAY_SHORT.map((label) => (
-              <div key={label} className="text-center text-[8px] font-medium text-slate-500">
+              <div key={label} className="text-center text-[9px] font-medium text-slate-500">
                 {label}
               </div>
             ))}
           </div>
 
-          <div className="agenda-month-grid flex min-h-0 flex-1 flex-col gap-0.5">
+          <div className="agenda-month-grid">
             {monthWeeks.map((week, wi) => (
-              <div key={wi} className="agenda-month-week grid min-h-0 flex-1 grid-cols-7 gap-0.5">
+              <div key={wi} className="agenda-month-week">
                 {week.map((day) => (
                   <button
                     key={day.date.toISOString()}
                     onClick={() => day.planDay && setSelectedMonthDay(day)}
                     disabled={!day.planDay}
                     title={day.planDay ? `${day.planDay.title} — ${day.planDay.focus}` : 'Rustdag'}
-                    className={`flex min-h-0 flex-col items-center justify-center rounded-md text-[9px] transition ${
+                    className={`agenda-month-day ${
                       !day.inMonth ? 'opacity-30' : ''
                     } ${
                       selectedMonthDay?.date.getTime() === day.date.getTime()
@@ -272,7 +272,12 @@ export default function AgendaPage() {
                             : 'text-slate-600'
                     } ${day.isToday ? 'ring-1 ring-cyan-400' : ''}`}
                   >
-                    <span>{day.date.getDate()}</span>
+                    <span className="agenda-month-day-num">{day.date.getDate()}</span>
+                    {day.planDay && (
+                      <span className={`agenda-month-day-label ${day.done ? 'text-slate-900/80' : 'text-slate-300'}`}>
+                        {day.planDay.title}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -282,12 +287,14 @@ export default function AgendaPage() {
       )}
 
       {view === 'week' && (
-        <section className="agenda-week flex min-h-0 flex-1 flex-col gap-0.5">
-          {saving && <p className="shrink-0 text-right text-[10px] text-slate-500">opslaan…</p>}
+        <section className="agenda-week flex flex-col gap-3">
+          {saving && <p className="text-right text-[10px] text-slate-500">opslaan…</p>}
           {agenda.days.map((day) => (
             <div
               key={day.weekday}
-              className={`agenda-day-row flex min-h-0 flex-1 flex-col justify-center ${day.isToday ? 'agenda-day-row--today ring-1 ring-emerald-400/40' : ''}`}
+              className={`agenda-day-row flex flex-col ${
+                day.isToday ? 'agenda-day-row--today' : ''
+              } ${day.done ? 'agenda-day-row--done' : day.missed ? 'agenda-day-row--missed' : day.planDay ? 'agenda-day-row--planned' : ''}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
