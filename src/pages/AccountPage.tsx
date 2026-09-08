@@ -6,7 +6,7 @@ import { useProfile } from '../hooks/useProfile'
 import { defaultDisplayName } from '../lib/profile'
 
 export default function AccountPage() {
-  const { user, signOut } = useAuth()
+  const { user, isGuest, signOut } = useAuth()
   const navigate = useNavigate()
   const { profile, loading, displayName, initial, saveDisplayName } = useProfile()
   const [username, setUsername] = useState('')
@@ -57,6 +57,12 @@ export default function AccountPage() {
   return (
     <div className="app-page app-page-account">
       <PageHeader section="Account" title="Mijn account" compact />
+
+      {isGuest && (
+        <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          Je bent ingelogd als gast. Wijzigingen worden niet opgeslagen. Log uit om terug te gaan naar het inlogscherm.
+        </p>
+      )}
 
       <div className="card flex items-center gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/10 text-lg font-bold text-emerald-400">
@@ -115,7 +121,7 @@ export default function AccountPage() {
           <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">{saveMessage}</p>
         )}
 
-        <button type="submit" disabled={saving} className="btn-primary w-full">
+        <button type="submit" disabled={saving || isGuest} className="btn-primary w-full">
           {saving ? 'Opslaan…' : 'Wijzigingen opslaan'}
         </button>
       </form>

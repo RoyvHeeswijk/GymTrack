@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { SettingsProvider } from './context/SettingsContext'
-import { isSupabaseConfigured } from './lib/supabase'
 import Layout from './components/Layout'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
@@ -14,7 +13,7 @@ import SettingsPage from './pages/SettingsPage'
 import AccountPage from './pages/AccountPage'
 
 function AppRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading, authError } = useAuth()
 
   if (loading) {
     return (
@@ -22,7 +21,7 @@ function AppRoutes() {
     )
   }
 
-  if (!user) return <AuthPage />
+  if (!user) return <AuthPage authError={authError} />
 
   return (
     <Routes>
@@ -41,30 +40,7 @@ function AppRoutes() {
   )
 }
 
-function ConfigNotice() {
-  return (
-    <div className="app-screen items-center justify-center px-6 text-center">
-      <p className="text-3xl">⚙️</p>
-      <h1 className="mt-3 text-xl font-bold text-white">Supabase nog niet ingesteld</h1>
-      <p className="mt-2 max-w-sm text-sm text-slate-400">
-        Maak een <code className="text-emerald-400">.env</code>-bestand aan in de projectmap met{' '}
-        <code className="text-emerald-400">VITE_SUPABASE_URL</code> en{' '}
-        <code className="text-emerald-400">VITE_SUPABASE_ANON_KEY</code>. Zie de README voor de
-        stappen.
-      </p>
-    </div>
-  )
-}
-
 export default function App() {
-  if (!isSupabaseConfigured) {
-    return (
-      <div className="app-bg app mx-auto flex h-full min-h-0 w-full max-w-md flex-col overflow-hidden shadow-2xl ring-1 ring-theme">
-        <ConfigNotice />
-      </div>
-    )
-  }
-
   return (
     <AuthProvider>
       <SettingsProvider>

@@ -39,7 +39,7 @@ const EXAMPLES = [
 ]
 
 export default function SchemaGenerator({ onActivated }: { onActivated?: () => void }) {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const navigate = useNavigate()
   const { workouts } = useWorkouts()
 
@@ -68,8 +68,9 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (isGuest) return
     fetchPlans().then(setSavedPlans).catch(() => {})
-  }, [])
+  }, [isGuest])
 
   useEffect(() => {
     if (detectedFocusMuscles.length === 0) setFocusOnly(false)
@@ -244,6 +245,10 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
 
   async function handleActivate() {
     if (!user || !plan) return
+    if (isGuest) {
+      setError('Demo-modus: schema\'s kunnen niet worden opgeslagen. Bekijk het resultaat of log in met een account.')
+      return
+    }
     setActivateState('busy')
     setError(null)
     try {
@@ -266,6 +271,10 @@ export default function SchemaGenerator({ onActivated }: { onActivated?: () => v
 
   async function handleSave() {
     if (!user || !plan) return
+    if (isGuest) {
+      setError('Demo-modus: schema\'s kunnen niet worden opgeslagen.')
+      return
+    }
     setSaveState('saving')
     setError(null)
     try {

@@ -43,7 +43,7 @@ function SettingToggle({
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const navigate = useNavigate()
   const { settings, updateSettings } = useSettings()
   const [clearing, setClearing] = useState(false)
@@ -115,14 +115,15 @@ export default function SettingsPage() {
         <div>
           <p className="font-medium text-primary">Prototype: alles wissen</p>
           <p className="mt-1 text-sm text-muted">
-            Verwijdert al je schema&apos;s, agenda, gelogde trainingen, sets en oefeningen. Handig om
-            opnieuw te testen vanaf een lege staat.
+            {isGuest
+              ? 'Niet beschikbaar in demo-modus. Log in met een account om je eigen data te beheren.'
+              : "Verwijdert al je schema's, agenda, gelogde trainingen, sets en oefeningen. Handig om opnieuw te testen vanaf een lege staat."}
           </p>
         </div>
         <button
           type="button"
           onClick={() => void handleClearAll()}
-          disabled={clearing}
+          disabled={clearing || isGuest}
           className="w-full rounded-xl border border-red-500/40 bg-red-500/10 py-3 text-sm font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
         >
           {clearing ? 'Bezig met wissen…' : 'Alle data wissen'}

@@ -255,7 +255,7 @@ function prefillFromHistory(blocks: ExerciseBlock[], workouts: WorkoutWithSets[]
 const AUTOSAVE_MS = 3000
 
 export default function LogWorkoutPage() {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const navigate = useNavigate()
   const { schedule, setSchedule, loading: scheduleLoading, reload: reloadSchedule } = useSchedule()
   const { workouts, loading: workoutsLoading, reload: reloadWorkouts } = useWorkouts()
@@ -339,6 +339,20 @@ export default function LogWorkoutPage() {
     let nextBlocks: ExerciseBlock[]
     let id: string
 
+    if (isGuest) {
+      id = `guest-${day.title}-${todayKey()}`
+      nextBlocks =
+        mergeFrom && mergeFrom.length > 0
+          ? mergeBlocksWithPlan(mergeFrom, day, history)
+          : prefillFromHistory(blocksFromPlanDay(day), history)
+      setWorkoutId(id)
+      setBlocks(nextBlocks)
+      writeSession({ workoutId: id, planTitle: day.title, date: todayKey() })
+      boundScheduleKey.current = scheduleKey(schedule.id, schedule.assignments)
+      setReady(true)
+      return
+    }
+
     if (mergeFrom && mergeFrom.length > 0) {
       const todays = await fetchTodaysWorkout(user.id, day.title)
       id = todays?.id ?? workoutIdRef.current ?? (await createWorkoutSession(user.id, day.title))
@@ -368,10 +382,11 @@ export default function LogWorkoutPage() {
   }
 
   useEffect(() => {
+    if (isGuest) return
     fetchExercises()
       .then((rows) => setKnownExercises(rows.map((r) => r.name)))
       .catch(() => {})
-  }, [])
+  }, [isGuest])
 
   useEffect(() => {
     const handler = () => {
@@ -413,6 +428,11 @@ export default function LogWorkoutPage() {
   useEffect(() => {
     if (!user || !workoutId || !ready) return
 
+    if (isGuest) {
+      setSaveStatus('saved')
+      return
+    }
+
     setSaveStatus((s) => (s === 'saving' ? s : 'idle'))
 
     const timer = setTimeout(() => {
@@ -431,7 +451,7 @@ export default function LogWorkoutPage() {
     }, AUTOSAVE_MS)
 
     return () => clearTimeout(timer)
-  }, [blocks, workoutId, user, ready, reloadWorkouts])
+  }, [blocks, workoutId, user, ready, reloadWorkouts, isGuest])
 
   const suggestions = useMemo(() => {
     const all = new Set([...knownExercises, ...DEFAULT_EXERCISES, ...EXERCISE_DB.map((e) => e.name)])
@@ -529,7 +549,9 @@ export default function LogWorkoutPage() {
           ),
         }
       })
-      await updateScheduleDays(schedule.id, newDays)
+      if (!isGuest) {
+        await updateScheduleDays(schedule.id, newDays)
+      }
       const updatedDay = newDays[sessionPlanDayIndex]
       setSchedule({ ...schedule, days: newDays })
       setSessionPlanDay(updatedDay)

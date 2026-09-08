@@ -42,7 +42,9 @@ body {
 
 :root {
   --top-bar-height: 56px;
+  --guest-banner-height: 32px;
   --top-bar-offset: calc(var(--top-bar-height) + env(safe-area-inset-top, 0px));
+  --content-top-offset: var(--top-bar-offset);
   --bottom-nav-height: 80px;
   --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
@@ -431,22 +433,46 @@ input[type="number"] {
 
   .page-content {
     @apply flex h-full min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4;
-    padding-top: calc(var(--top-bar-offset) + 0.75rem);
+    padding-top: calc(var(--content-top-offset) + 0.75rem);
     padding-bottom: var(--bottom-nav-offset);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
   .page-content-home {
-    padding-top: calc(var(--top-bar-offset) + 0.5rem);
+    padding-top: calc(var(--content-top-offset) + 0.5rem);
   }
 
   .page-content-log {
-    padding-top: calc(var(--top-bar-offset) + 0.5rem);
+    padding-top: calc(var(--content-top-offset) + 0.5rem);
   }
 
   .page-content-agenda {
-    padding-top: calc(var(--top-bar-offset) + 0.5rem);
+    padding-top: calc(var(--content-top-offset) + 0.5rem);
+  }
+
+  .page-content-guest {
+    --content-top-offset: calc(var(--top-bar-offset) + var(--guest-banner-height));
+  }
+
+  .guest-banner {
+    position: fixed;
+    top: var(--top-bar-offset);
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    height: var(--guest-banner-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.12);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+    color: rgb(252, 211, 77);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
   .app-page {
